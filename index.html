@@ -398,10 +398,12 @@ No game data is included.</pre>
     setState("", "Loading repository-hosted WebAssembly");
     title.textContent = "Initializing browser platform";
     message.textContent = "Loading the compiled C++ platform adapter from this GitHub Pages repository.";
-    write("Loading " + new URL("mkwii-web.js", ASSET_BASE).href);
+    const loaderURL = new URL("mkwii-web.js", ASSET_BASE);
+    loaderURL.searchParams.set("build", "0.5");
+    write("Loading " + loaderURL.href);
     try {
       const script = document.createElement("script");
-      script.src = new URL("mkwii-web.js", ASSET_BASE).href;
+      script.src = loaderURL.href;
       script.async = true;
       await withTimeout(new Promise((resolve,reject) => {
         script.onload = resolve;
@@ -411,7 +413,11 @@ No game data is included.</pre>
       write("JavaScript loader downloaded. Starting WebAssembly initialization...");
       if (typeof createMkwiiModule !== "function") throw new Error("The WebAssembly factory was not found in the downloaded loader.");
       const module = await withTimeout(createMkwiiModule({
-        locateFile: path => new URL(path,ASSET_BASE).href,
+        locateFile: path => {
+          const assetURL = new URL(path, ASSET_BASE);
+          assetURL.searchParams.set("build", "0.5");
+          return assetURL.href;
+        },
         print: line => write(String(line)),
         printErr: line => write("ERROR: " + String(line))
       }), 20000, "WebAssembly initialization");
@@ -459,10 +465,17 @@ No game data is included.</pre>
     }
   }
   button.addEventListener("click",boot);
+  // Disable the experimental service worker while diagnosing whole-page loading.
+  // Unregister existing workers and clear this project's old asset caches.
   if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
-    navigator.serviceWorker.register(new URL("./sw.js",document.baseURI),{scope:"./"})
-      .then(() => write("Offline cache service worker registered."))
-      .catch(error => write("Cache worker unavailable: " + error.message));
+    navigator.serviceWorker.getRegistrations()
+      .then(registrations => Promise.all(registrations.map(registration => registration.unregister())))
+      .then(() => caches.keys())
+      .then(keys => Promise.all(keys
+        .filter(key => key.startsWith("mkwii-web-assets-"))
+        .map(key => caches.delete(key))))
+      .then(() => write("Service worker disabled; using normal network loading with v0.5 cache-busted assets."))
+      .catch(error => write("Service-worker cleanup unavailable: " + error.message));
   }
 })();
 </script>
