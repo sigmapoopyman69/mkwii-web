@@ -1,4 +1,4 @@
-#include "guest_abi/guest_abi.h"
+#include "browser_guest_abi_smoke.h"
 
 extern "C" void wii_compiled_translated_addi_smoke(CpuContext* ctx);
 

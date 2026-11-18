@@ -37,19 +37,29 @@ if (result.Instructions.Count != 2 || result.Metrics.UnsupportedInstructionCount
     return 3;
 }
 
-if (!result.CxxCode.Contains("wii_compiled_translated_addi_smoke", StringComparison.Ordinal))
+const string upstreamAbiInclude = "#include \"guest_abi/guest_abi.h\"";
+const string browserAbiInclude = "#include \"browser_guest_abi_smoke.h\"";
+if (!result.CxxCode.Contains(upstreamAbiInclude, StringComparison.Ordinal))
+{
+    Console.Error.WriteLine("Translator output did not contain the expected upstream guest ABI include.");
+    return 4;
+}
+
+var browserCpp = result.CxxCode.Replace(upstreamAbiInclude, browserAbiInclude, StringComparison.Ordinal);
+if (!browserCpp.Contains("wii_compiled_translated_addi_smoke", StringComparison.Ordinal))
 {
     Console.Error.WriteLine("Translator output did not contain the requested function symbol.");
-    return 4;
+    return 5;
 }
 
 var output = Path.GetFullPath(args[0]);
 Directory.CreateDirectory(Path.GetDirectoryName(output)!);
-File.WriteAllText(output, result.CxxCode);
+File.WriteAllText(output, browserCpp);
 Console.WriteLine("Upstream WiiCompiled translator generated C++ from synthetic PowerPC instructions.");
 Console.WriteLine($"  entry: 0x{entryPoint:X8}");
 Console.WriteLine($"  PPC instructions: {result.Metrics.PpcInstructionCount}");
 Console.WriteLine($"  unsupported instructions: {result.Metrics.UnsupportedInstructionCount}");
-Console.WriteLine($"  generated C++ bytes: {result.CxxCode.Length}");
+Console.WriteLine("  ABI include: replaced desktop guest_abi umbrella with matching minimal CPU-context shim");
+Console.WriteLine($"  generated C++ bytes: {browserCpp.Length}");
 Console.WriteLine($"  output: {output}");
 return 0;
