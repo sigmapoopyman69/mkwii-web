@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#101014">
   <meta name="description" content="WiiCompiled Web — browser-based WebAssembly port foundation.">
-  <title>WiiCompiled Web 0.2</title>
+  <title>WiiCompiled Web 0.3</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <style>
     :root{color-scheme:dark;--bg:#101014;--panel:#19191f;--line:#30303a;--red:#e53945;--muted:#a3a3ad;--text:#f5f5f7}
@@ -19,12 +19,12 @@
     button{width:100%;border:0;border-radius:10px;background:var(--red);color:white;font:700 15px system-ui;padding:13px 18px;cursor:pointer;transition:filter .15s,transform .15s}button:hover{filter:brightness(1.12)}button:active{transform:scale(.99)}button:disabled{opacity:.55;cursor:wait}
     .caps{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:9px;margin:16px 0}.cap{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid #30303a;background:#111116;border-radius:9px;padding:10px 12px;font-size:13px}.cap span:last-child{font-weight:700}.yes{color:#42c987}.no{color:#ed5964}.unknown{color:#e5a33b}
     .log{margin-top:15px;max-height:130px;overflow:auto;padding:12px;border-radius:9px;background:#0c0c10;border:1px solid #292932;color:#bdbdc7;font:12px/1.5 ui-monospace,monospace;white-space:pre-wrap}
-    .note{font-size:12px;color:#8e8e99;margin:12px 0 0}footer{text-align:center;color:#777783;font-size:12px;margin-top:18px}
+    .note{font-size:12px;color:#8e8e99;margin:12px 0 0}.adapter{border:1px solid #30303a;background:#111116;border-radius:10px;padding:14px;margin:12px 0}.adapter h3{font-size:14px;margin:0 0 8px}.adapter p{font-size:13px;color:var(--muted);margin:5px 0}.adapter button{margin-top:8px}.adapter-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:7px}.adapter-value{font:12px ui-monospace,monospace;color:#d8d8e0;overflow-wrap:anywhere}footer{text-align:center;color:#777783;font-size:12px;margin-top:18px}
   </style>
 </head>
 <body>
 <main>
-  <header class="brand"><div class="mark">W</div><h1>WiiCompiled Web</h1><p class="sub">Browser port · version 0.2 graphics prototype</p></header>
+  <header class="brand"><div class="mark">W</div><h1>WiiCompiled Web</h1><p class="sub">Browser port · version 0.3 input/audio adapters</p></header>
   <section class="panel">
     <div class="screen">
       <canvas id="gpu-canvas" aria-label="Live WebGPU graphics test"></canvas>
@@ -40,7 +40,22 @@
       <div class="cap"><span>Shared memory</span><span class="unknown">Not checked</span></div>
       <div class="cap"><span>Fullscreen</span><span class="unknown">Not checked</span></div>
     </div>
-    <p class="note">Version 0.2 tests a real WebGPU device, canvas surface, shader pipeline, and animated frame loop. It is a graphics test only; no game renderer or game code is connected.</p>
+    <section class="adapter">
+      <h3>Controller input</h3>
+      <p id="gamepad-status">Waiting for a controller. Connect one and press a button to wake the browser Gamepad API.</p>
+      <div class="adapter-grid">
+        <div class="cap"><span>Controller</span><span id="pad-name" class="unknown">None</span></div>
+        <div class="cap"><span>Buttons pressed</span><span id="pad-buttons" class="adapter-value">—</span></div>
+        <div class="cap"><span>Left stick</span><span id="pad-left" class="adapter-value">—</span></div>
+        <div class="cap"><span>Right stick</span><span id="pad-right" class="adapter-value">—</span></div>
+      </div>
+    </section>
+    <section class="adapter">
+      <h3>Web Audio output</h3>
+      <p id="audio-status">Audio is not started. Browser audio requires a user gesture.</p>
+      <button id="audio-test" type="button">Initialize audio &amp; play test tone</button>
+    </section>
+    <p class="note">Version 0.3 adds live browser gamepad polling and a user-initiated Web Audio test. This remains a platform adapter prototype; game controls and game audio are not connected.</p>
     <pre class="log" id="log" aria-live="polite">WiiCompiled Web 0.1
 Browser platform adapter ready.
 No game data is included.</pre>
@@ -81,6 +96,73 @@ No game data is included.</pre>
       write(name + ": " + (available ? "available" : "unavailable"));
     }
   }
+  let audioContext = null;
+  function startGamepadMonitor() {
+    const statusEl = document.getElementById("gamepad-status");
+    const nameEl = document.getElementById("pad-name");
+    const buttonsEl = document.getElementById("pad-buttons");
+    const leftEl = document.getElementById("pad-left");
+    const rightEl = document.getElementById("pad-right");
+    let lastIndex = -1;
+    function update() {
+      const pads = navigator.getGamepads ? Array.from(navigator.getGamepads()) : [];
+      const pad = pads.find(p => p && p.connected);
+      if (!pad) {
+        statusEl.textContent = "No controller detected. Connect one and press a button.";
+        nameEl.textContent = "None";
+        nameEl.className = "unknown";
+        buttonsEl.textContent = "—";
+        leftEl.textContent = "—";
+        rightEl.textContent = "—";
+      } else {
+        if (lastIndex !== pad.index) write("Gamepad connected: " + pad.id);
+        lastIndex = pad.index;
+        statusEl.textContent = "Controller connected · index " + pad.index;
+        nameEl.textContent = pad.id.length > 24 ? pad.id.slice(0,21) + "…" : pad.id;
+        nameEl.className = "yes";
+        const pressed = pad.buttons.map((b,i) => b.pressed ? i : -1).filter(i => i >= 0);
+        buttonsEl.textContent = pressed.length ? pressed.join(", ") : "None";
+        const axis = n => (pad.axes[n] ?? 0).toFixed(2);
+        leftEl.textContent = axis(0) + ", " + axis(1);
+        rightEl.textContent = axis(2) + ", " + axis(3);
+      }
+      requestAnimationFrame(update);
+    }
+    window.addEventListener("gamepadconnected", e => write("Gamepad event: " + e.gamepad.id));
+    window.addEventListener("gamepaddisconnected", e => write("Gamepad disconnected: " + e.gamepad.id));
+    requestAnimationFrame(update);
+  }
+  async function playAudioTest() {
+    const statusEl = document.getElementById("audio-status");
+    const audioButton = document.getElementById("audio-test");
+    audioButton.disabled = true;
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) throw new Error("Web Audio is unavailable in this browser.");
+      if (!audioContext) audioContext = new AudioCtx();
+      if (audioContext.state === "suspended") await audioContext.resume();
+      const oscillator = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+      oscillator.type = "sine";
+      oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
+      gain.gain.setValueAtTime(0.0001, audioContext.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.12, audioContext.currentTime + 0.025);
+      gain.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.22);
+      oscillator.connect(gain);
+      gain.connect(audioContext.destination);
+      oscillator.start();
+      oscillator.stop(audioContext.currentTime + 0.23);
+      statusEl.textContent = "Web Audio running · 44.1/48 kHz browser-managed · 440 Hz test tone requested.";
+      write("Web Audio context state: " + audioContext.state + ". Test tone played.");
+    } catch (error) {
+      statusEl.textContent = "Audio unavailable: " + error.message;
+      write("AUDIO: " + error.message);
+    } finally {
+      audioButton.disabled = false;
+    }
+  }
+  document.getElementById("audio-test").addEventListener("click",playAudioTest);
+  startGamepadMonitor();
   async function startWebGpuRenderer() {
     const canvas = document.getElementById("gpu-canvas");
     if (!navigator.gpu) return { ok:false, reason:"WebGPU is not available in this browser." };
@@ -224,9 +306,9 @@ No game data is included.</pre>
       const graphics = await startWebGpuRenderer();
       if (graphics.ok) {
         setState("ok","WebGPU renderer running");
-        title.textContent = "Version 0.2 graphics initialized";
-        message.textContent = "A real WebGPU device is rendering an animated test frame on the canvas.";
-        button.textContent = "Graphics running";
+        title.textContent = "Version 0.3 platform adapters initialized";
+        message.textContent = "WebGPU graphics are running. Controller monitoring and the user-initiated audio test are ready.";
+        button.textContent = "Platform adapters running";
       } else {
         setState("bad","WebGPU renderer unavailable");
         title.textContent = "Platform initialized · graphics unavailable";
