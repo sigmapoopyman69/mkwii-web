@@ -31,7 +31,8 @@ extern "C" int mkwii_web_translator_smoke_test() {
     context.gpr[3] = 0x80002000u;
     wii_compiled_translated_memory_smoke(&context);
     if (BrowserTranslatedMemory::HasFault()) return 4;
-    if (context.gpr[4] != 0x12345678u) return 5;
+    // The translated sequence performs lwz, then addi r4,r4,1 before returning.
+    if (context.gpr[4] != 0x12345679u) return 5;
 
     std::uint32_t stored = 0;
     if (!BrowserTranslatedMemory::Backing().Read32(0x80002004u, stored)) return 6;
