@@ -399,7 +399,7 @@ No game data is included.</pre>
     title.textContent = "Initializing browser platform";
     message.textContent = "Loading the compiled C++ platform adapter from this GitHub Pages repository.";
     const loaderURL = new URL("mkwii-web.js", ASSET_BASE);
-    loaderURL.searchParams.set("build", "0.5");
+    loaderURL.searchParams.set("build", "0.6");
     write("Loading " + loaderURL.href);
     try {
       const script = document.createElement("script");
@@ -415,7 +415,7 @@ No game data is included.</pre>
       const module = await withTimeout(createMkwiiModule({
         locateFile: path => {
           const assetURL = new URL(path, ASSET_BASE);
-          assetURL.searchParams.set("build", "0.5");
+          assetURL.searchParams.set("build", "0.6");
           return assetURL.href;
         },
         print: line => write(String(line)),
@@ -444,7 +444,7 @@ No game data is included.</pre>
       const graphics = await startWebGpuRenderer();
       if (graphics.ok) {
         setState("ok","WebGPU renderer running");
-        title.textContent = "Version 0.5 runtime prototype initialized";
+        title.textContent = "Version 0.6 guest-memory prototype initialized";
         message.textContent = "WebGPU graphics are running. Controller monitoring and the user-initiated audio test are ready.";
         button.textContent = "Platform adapters running";
       } else {
