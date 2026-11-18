@@ -27,6 +27,7 @@
   <header class="brand"><div class="mark">W</div><h1>WiiCompiled Web</h1><p class="sub">Browser port · version 0.2 graphics prototype</p></header>
   <section class="panel">
     <div class="screen">
+      <canvas id="gpu-canvas" aria-label="Live WebGPU graphics test"></canvas>
       <div><div class="kart">🏁</div><h2 id="screen-title">WebGPU graphics prototype</h2><p id="screen-message">Initialize the WebAssembly platform and start the live WebGPU test renderer.</p></div>
     </div>
     <div class="status"><span class="dot" id="status-dot"></span><span id="status-text">Ready to initialize</span></div>
@@ -220,10 +221,19 @@ No game data is included.</pre>
       if (getStatus() !== 1) throw new Error("The C++ platform adapter returned an unexpected status.");
       showCapabilities(getCapabilities());
       write("Browser clock: " + getUptime().toFixed(1) + " ms");
-      setState("ok","WASM browser platform initialized");
-      title.textContent = "Version 0.1 initialized";
-      message.textContent = "The C++ browser platform layer is running and has reported its available browser APIs.";
-      button.textContent = "Initialized";
+      const graphics = await startWebGpuRenderer();
+      if (graphics.ok) {
+        setState("ok","WebGPU renderer running");
+        title.textContent = "Version 0.2 graphics initialized";
+        message.textContent = "A real WebGPU device is rendering an animated test frame on the canvas.";
+        button.textContent = "Graphics running";
+      } else {
+        setState("bad","WebGPU renderer unavailable");
+        title.textContent = "Platform initialized · graphics unavailable";
+        message.textContent = graphics.reason;
+        write("GRAPHICS: " + graphics.reason);
+        button.textContent = "Platform initialized";
+      }
     } catch (error) {
       setState("bad","Initialization failed");
       title.textContent = "Build not ready";
