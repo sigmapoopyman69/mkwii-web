@@ -74,6 +74,15 @@ No game data is included.</pre>
   const log = document.getElementById("log");
   const caps = document.getElementById("capabilities");
   let started = false;
+  function withTimeout(promise, milliseconds, label) {
+    return new Promise((resolve,reject) => {
+      const timer = setTimeout(() => reject(new Error(label + " timed out after " + Math.round(milliseconds / 1000) + " seconds.")), milliseconds);
+      Promise.resolve(promise).then(
+        value => { clearTimeout(timer); resolve(value); },
+        error => { clearTimeout(timer); reject(error); }
+      );
+    });
+  }
   function write(line) { log.textContent += "\n" + line; log.scrollTop = log.scrollHeight; }
   function setState(kind, label) { dot.className = "dot" + (kind ? " " + kind : ""); status.textContent = label; }
   function showCapabilities(flags) {
@@ -167,9 +176,9 @@ No game data is included.</pre>
     const canvas = document.getElementById("gpu-canvas");
     if (!navigator.gpu) return { ok:false, reason:"WebGPU is not available in this browser." };
     try {
-      const adapter = await navigator.gpu.requestAdapter();
+      const adapter = await withTimeout(navigator.gpu.requestAdapter(), 12000, "WebGPU adapter request");
       if (!adapter) return { ok:false, reason:"The browser did not provide a WebGPU adapter." };
-      const device = await adapter.requestDevice();
+      const device = await withTimeout(adapter.requestDevice(), 12000, "WebGPU device request");
       const context = canvas.getContext("webgpu");
       if (!context) return { ok:false, reason:"Could not create a WebGPU canvas context." };
       const format = navigator.gpu.getPreferredCanvasFormat();
@@ -274,17 +283,18 @@ No game data is included.</pre>
       const script = document.createElement("script");
       script.src = new URL("mkwii-web.js", ASSET_BASE).href;
       script.async = true;
-      await new Promise((resolve,reject) => {
+      await withTimeout(new Promise((resolve,reject) => {
         script.onload = resolve;
         script.onerror = () => reject(new Error("Could not load dist/mkwii-web.js. Check that the latest Actions build completed."));
         document.head.appendChild(script);
-      });
+      }), 15000, "JavaScript loader download");
+      write("JavaScript loader downloaded. Starting WebAssembly initialization...");
       if (typeof createMkwiiModule !== "function") throw new Error("The WebAssembly factory was not found in the downloaded loader.");
-      const module = await createMkwiiModule({
+      const module = await withTimeout(createMkwiiModule({
         locateFile: path => new URL(path,ASSET_BASE).href,
         print: line => write(String(line)),
         printErr: line => write("ERROR: " + String(line))
-      });
+      }), 20000, "WebAssembly initialization");
       // Call the explicitly exported C functions directly. This avoids any
       // dependency on Emscripten's cwrap helper or older frontend APIs.
       const getStatus = module._mkwii_web_status;
@@ -303,6 +313,7 @@ No game data is included.</pre>
       if (getStatus() !== 1) throw new Error("The C++ platform adapter returned an unexpected status.");
       showCapabilities(getCapabilities());
       write("Browser clock: " + getUptime().toFixed(1) + " ms");
+      write("WebAssembly initialized. Requesting WebGPU renderer...");
       const graphics = await startWebGpuRenderer();
       if (graphics.ok) {
         setState("ok","WebGPU renderer running");
