@@ -35,6 +35,6 @@ int main() {
     const bool memorySmokeTest = BrowserGuestMemory::RunSmokeTest();
     std::printf("Browser guest-memory smoke test: %s\n", memorySmokeTest ? "PASS" : "FAIL");
     const bool runtimeMemorySmokeTest = BrowserRuntimeMemory::RunSmokeTest();
-    std::printf("Browser runtime-memory API smoke test: %s\\n", runtimeMemorySmokeTest ? "PASS" : "FAIL");
+    std::printf("Browser runtime-memory API smoke test: %s\n", runtimeMemorySmokeTest ? "PASS" : "FAIL");
     return (fiberSmokeTest && memorySmokeTest && runtimeMemorySmokeTest) ? 0 : 1;
 }

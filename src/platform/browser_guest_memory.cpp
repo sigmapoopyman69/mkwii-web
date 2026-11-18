@@ -51,7 +51,7 @@ bool Memory::ReadBytes(std::uint32_t a,void* destination,std::size_t length) con
   if(!Decode(address,l))return false;
   const std::size_t pageOffset=l.offset%kPageSize;
   const std::size_t chunk=std::min(remaining,std::size_t(kPageSize)-pageOffset);
-  const Page* page=impl_->Find(l.region,l.offset);
+  const Impl::Page* page=impl_->Find(l.region,l.offset);
   if(page)std::memcpy(out,page->data()+pageOffset,chunk);
   else std::memset(out,0,chunk);
   out+=chunk;address+=static_cast<std::uint32_t>(chunk);remaining-=chunk;
@@ -72,7 +72,7 @@ bool Memory::WriteBytes(std::uint32_t a,const void* source,std::size_t length) n
   if(!Decode(address,l))return false;
   const std::size_t pageOffset=l.offset%kPageSize;
   const std::size_t chunk=std::min(remaining,std::size_t(kPageSize)-pageOffset);
-  Page* page=impl_->Ensure(l.region,l.offset);
+  Impl::Page* page=impl_->Ensure(l.region,l.offset);
   if(!page)return false;
   std::memcpy(page->data()+pageOffset,in,chunk);
   in+=chunk;address+=static_cast<std::uint32_t>(chunk);remaining-=chunk;

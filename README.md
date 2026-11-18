@@ -81,7 +81,10 @@ This does not yet run upstream WiiCompiled scheduler code. The upstream runtime 
 2. **0.2 — Browser graphics prototype:** establish a real WebGPU device, surface, and clear-frame loop.
 3. **0.3 — Input/audio adapters:** browser gamepad mapping and Web Audio output.
 4. **0.4 — Browser storage adapters:** IndexedDB persistence and bounded virtual-filesystem mounting.
-5. **0.5 — Runtime porting:** replace native fibers and begin the guest-memory port.\n6. **0.6+ — Translated-code integration:** only after runtime, graphics, I/O, audio, and input are ready.
+5. **0.5 — Runtime porting:** establish the experimental cooperative-fiber host-context boundary.
+6. **0.6 — Guest memory:** sparse MEM1/MEM2 address model and alias tests.
+7. **0.7 — Runtime memory API:** checked scalar, floating-point, and bulk-copy adapter.
+8. **0.8+ — Upstream integration:** investigate the flat-memory translated-code path and remaining host services.
 
 ## Technical limitation
 
