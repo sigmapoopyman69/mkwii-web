@@ -2,9 +2,22 @@
 
 An experimental browser-port project for [WiiCompiled](https://github.com/patchzyy/Wiicompiled).
 
-**Current status: version 0.3 browser input/audio adapters. This is not a playable Mario Kart Wii port.**
+**Current status: version 0.4 browser storage and virtual-filesystem adapters. This is not a playable Mario Kart Wii port.**
 
 The goal is to investigate adapting WiiCompiled's static-recompilation output and runtime for browsers, with a single HTML launcher and repository-hosted WebAssembly resources.
+
+## Version 0.4
+
+This milestone adds a browser-local persistence layer:
+
+- IndexedDB database for settings and user-selected files.
+- Storage usage/quota estimate when supported by the browser.
+- File listing and deletion controls.
+- A small settings save/load round-trip test.
+- An experimental Emscripten virtual-filesystem mount for stored files up to 128 MiB.
+- Files stay in the current browser's local origin storage; the site does not upload them.
+
+Large disc images are not yet suitable for this in-memory mount. A streaming filesystem and a game-runtime file-access contract are still required before large game data can be consumed.
 
 ## Version 0.3
 
