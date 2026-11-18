@@ -32,6 +32,6 @@ int main() {
     const bool fiberSmokeTest = BrowserHostContext::RunSmokeTest();
     std::printf("Browser cooperative-fiber smoke test: %s\n", fiberSmokeTest ? "PASS" : "FAIL");
     const bool memorySmokeTest = BrowserGuestMemory::RunSmokeTest();
-    std::printf("Browser guest-memory smoke test: %s\\n", memorySmokeTest ? "PASS" : "FAIL");
+    std::printf("Browser guest-memory smoke test: %s\n", memorySmokeTest ? "PASS" : "FAIL");
     return (fiberSmokeTest && memorySmokeTest) ? 0 : 1;
 }
