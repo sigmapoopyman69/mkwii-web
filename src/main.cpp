@@ -5,36 +5,33 @@
 #include "platform/browser_host_context.h"
 #include "platform/browser_guest_memory.h"
 #include "platform/browser_runtime_memory.h"
+#include "platform/browser_translated_memory.h"
 
 extern "C" {
 
 EMSCRIPTEN_KEEPALIVE
-int mkwii_web_status() {
-    return 1;
-}
+int mkwii_web_status() { return 1; }
 
 EMSCRIPTEN_KEEPALIVE
-unsigned int mkwii_web_capabilities() {
-    return BrowserPlatform::GetCapabilities();
-}
+unsigned int mkwii_web_capabilities() { return BrowserPlatform::GetCapabilities(); }
 
 EMSCRIPTEN_KEEPALIVE
-double mkwii_web_uptime_ms() {
-    return BrowserPlatform::NowMilliseconds();
-}
+double mkwii_web_uptime_ms() { return BrowserPlatform::NowMilliseconds(); }
 
 }
 
 int main() {
     const auto capabilities = BrowserPlatform::GetCapabilities();
-    std::puts("WiiCompiled Web 0.7: runtime memory adapter prototype initialized.");
+    std::puts("WiiCompiled Web 0.8: translated-memory ABI prototype initialized.");
     std::printf("Browser capability flags: %u\n", capabilities);
-    std::puts("Checked runtime memory API subset is connected; translated game runtime is not connected yet.");
+    std::puts("Upstream codegen helper names are exposed through a checked browser ABI; no game code is loaded.");
     const bool fiberSmokeTest = BrowserHostContext::RunSmokeTest();
     std::printf("Browser cooperative-fiber smoke test: %s\n", fiberSmokeTest ? "PASS" : "FAIL");
     const bool memorySmokeTest = BrowserGuestMemory::RunSmokeTest();
     std::printf("Browser guest-memory smoke test: %s\n", memorySmokeTest ? "PASS" : "FAIL");
     const bool runtimeMemorySmokeTest = BrowserRuntimeMemory::RunSmokeTest();
     std::printf("Browser runtime-memory API smoke test: %s\n", runtimeMemorySmokeTest ? "PASS" : "FAIL");
-    return (fiberSmokeTest && memorySmokeTest && runtimeMemorySmokeTest) ? 0 : 1;
+    const bool translatedMemorySmokeTest = BrowserTranslatedMemory::RunSmokeTest();
+    std::printf("Browser translated-memory helper ABI smoke test: %s\n", translatedMemorySmokeTest ? "PASS" : "FAIL");
+    return (fiberSmokeTest && memorySmokeTest && runtimeMemorySmokeTest && translatedMemorySmokeTest) ? 0 : 1;
 }
