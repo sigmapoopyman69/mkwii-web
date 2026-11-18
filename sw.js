@@ -1,4 +1,4 @@
-const CACHE_NAME = "mkwii-web-assets-v5";
+const CACHE_NAME = "mkwii-web-assets-v6";
 
 self.addEventListener("install", event => {
   event.waitUntil(self.skipWaiting());
@@ -22,6 +22,7 @@ self.addEventListener("fetch", event => {
   const isAppAsset =
     url.pathname.includes("/dist/") ||
     url.pathname.endsWith("/index.html") ||
+    url.pathname.endsWith("/storage.js") ||
     url.pathname.endsWith("/manifest.webmanifest") ||
     url.pathname.endsWith("/");
 
