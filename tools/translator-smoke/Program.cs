@@ -10,13 +10,32 @@ if (args.Length != 1)
 }
 
 const uint entryPoint = 0x80001000;
-const uint addiR3R3Seven = 0x38630007;
-const uint blr = 0x4E800020;
-var memory = new byte[0x1000];
-BinaryPrimitives.WriteUInt32BigEndian(memory.AsSpan(0, 4), addiR3R3Seven);
-BinaryPrimitives.WriteUInt32BigEndian(memory.AsSpan(4, 4), blr);
+const uint branchEntry = entryPoint;
+const uint memoryEntry = entryPoint + 0x20;
 
-var usedRange = new AddressRange(entryPoint, entryPoint + 8);
+// branch function:
+//   cmpwi r3, 42
+//   beq   +8
+//   addi  r4, 0, 9
+//   addi  r4, 0, 7
+//   blr
+//
+// memory function:
+//   lwz   r4, 0(r3)
+//   addi  r4, r4, 1
+//   stw   r4, 4(r3)
+//   blr
+var words = new uint[]
+{
+    0x2C03002A, 0x41820008, 0x38800009, 0x38800007, 0x4E800020,
+    0, 0, 0, 0, 0, 0, 0,
+    0x80830000, 0x38840001, 0x90830004, 0x4E800020
+};
+var memory = new byte[0x1000];
+for (var i = 0; i < words.Length; i++)
+    BinaryPrimitives.WriteUInt32BigEndian(memory.AsSpan(i * 4, 4), words[i]);
+
+var usedRange = new AddressRange(entryPoint, entryPoint + 0x100);
 var image = new ProgramImage(
     memory,
     usedRange,
@@ -26,40 +45,49 @@ var image = new ProgramImage(
     memoryBase: entryPoint);
 
 var translator = new FunctionTranslator(image);
-var result = translator.Translate(entryPoint, new TranslationOptions(
-    PreferredName: "wii_compiled_translated_addi_smoke",
+var branchResult = translator.Translate(branchEntry, new TranslationOptions(
+    PreferredName: "wii_compiled_translated_branch_smoke",
+    EnableLeafInlining: false));
+var memoryResult = translator.Translate(memoryEntry, new TranslationOptions(
+    PreferredName: "wii_compiled_translated_memory_smoke",
     EnableLeafInlining: false));
 
-if (result.Instructions.Count != 2 || result.Metrics.UnsupportedInstructionCount != 0)
-{
-    Console.Error.WriteLine(
-        $"Unexpected translation: instructions={result.Instructions.Count}, unsupported={result.Metrics.UnsupportedInstructionCount}");
-    return 3;
-}
+Validate(branchResult, "branch", expectedInstructions: 5);
+Validate(memoryResult, "memory", expectedInstructions: 4);
 
 const string upstreamAbiInclude = "#include \"guest_abi/guest_abi.h\"";
 const string browserAbiInclude = "#include \"browser_guest_abi_smoke.h\"";
-if (!result.CxxCode.Contains(upstreamAbiInclude, StringComparison.Ordinal))
+
+string Adapt(string code, string symbol)
 {
-    Console.Error.WriteLine("Translator output did not contain the expected upstream guest ABI include.");
-    return 4;
+    if (!code.Contains(upstreamAbiInclude, StringComparison.Ordinal))
+        throw new InvalidOperationException($"{symbol}: missing expected upstream guest ABI include.");
+    var adapted = code.Replace(upstreamAbiInclude, browserAbiInclude, StringComparison.Ordinal);
+    if (!adapted.Contains(symbol, StringComparison.Ordinal))
+        throw new InvalidOperationException($"{symbol}: generated function symbol missing.");
+    return adapted;
 }
 
-var browserCpp = result.CxxCode.Replace(upstreamAbiInclude, browserAbiInclude, StringComparison.Ordinal);
-if (!browserCpp.Contains("wii_compiled_translated_addi_smoke", StringComparison.Ordinal))
-{
-    Console.Error.WriteLine("Translator output did not contain the requested function symbol.");
-    return 5;
-}
+var generated = Adapt(branchResult.CxxCode, "wii_compiled_translated_branch_smoke")
+    + Environment.NewLine
+    + Adapt(memoryResult.CxxCode, "wii_compiled_translated_memory_smoke");
 
 var output = Path.GetFullPath(args[0]);
 Directory.CreateDirectory(Path.GetDirectoryName(output)!);
-File.WriteAllText(output, browserCpp);
-Console.WriteLine("Upstream WiiCompiled translator generated C++ from synthetic PowerPC instructions.");
-Console.WriteLine($"  entry: 0x{entryPoint:X8}");
-Console.WriteLine($"  PPC instructions: {result.Metrics.PpcInstructionCount}");
-Console.WriteLine($"  unsupported instructions: {result.Metrics.UnsupportedInstructionCount}");
-Console.WriteLine("  ABI include: replaced desktop guest_abi umbrella with matching minimal CPU-context shim");
-Console.WriteLine($"  generated C++ bytes: {browserCpp.Length}");
+File.WriteAllText(output, generated);
+Console.WriteLine("Upstream WiiCompiled translator generated two synthetic PowerPC functions.");
+Console.WriteLine($"  branch entry: 0x{branchEntry:X8}; instructions: {branchResult.Metrics.PpcInstructionCount}; unsupported: {branchResult.Metrics.UnsupportedInstructionCount}");
+Console.WriteLine($"  memory entry: 0x{memoryEntry:X8}; instructions: {memoryResult.Metrics.PpcInstructionCount}; unsupported: {memoryResult.Metrics.UnsupportedInstructionCount}");
+Console.WriteLine("  coverage: cmpwi/beq conditional path, addi, lwz, stw, blr");
+Console.WriteLine($"  generated C++ bytes: {generated.Length}");
 Console.WriteLine($"  output: {output}");
 return 0;
+
+static void Validate(FunctionTranslationResult result, string label, int expectedInstructions)
+{
+    if (result.Instructions.Count != expectedInstructions || result.Metrics.UnsupportedInstructionCount != 0)
+    {
+        throw new InvalidOperationException(
+            $"{label}: unexpected translation; instructions={result.Instructions.Count}, unsupported={result.Metrics.UnsupportedInstructionCount}");
+    }
+}

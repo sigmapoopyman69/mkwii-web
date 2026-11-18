@@ -1,9 +1,10 @@
 #pragma once
 
-// Minimal CPU-context ABI mirror for the arithmetic-only translator smoke test.
-// Field order and scalar widths match upstream runtime/include/guest_abi/cpu_context.h.
-// This deliberately avoids importing desktop-only SIMD and FP-control headers.
+// Minimal CPU-context ABI mirror for the arithmetic, branch and scalar-memory
+// translator smoke tests. Field order and widths match upstream cpu_context.h.
+// Desktop SIMD/FP-control headers are intentionally excluded.
 #include <cstdint>
+#include "platform/browser_translated_memory.h"
 
 #ifndef MKW_RESTRICT
 #define MKW_RESTRICT __restrict
