@@ -49,6 +49,9 @@ jobs:
             -p:UpstreamRoot="$RUNNER_TEMP/Wiicompiled" -- \
             generated/translated_addi_smoke.cpp
           test -s generated/translated_addi_smoke.cpp
+          echo '--- GENERATED TRANSLATOR C++ ---'
+          cat generated/translated_addi_smoke.cpp
+          echo '--- END GENERATED TRANSLATOR C++ ---'
 
       - name: Install Emscripten SDK
         uses: mymindstorm/setup-emsdk@v14
