@@ -11,7 +11,7 @@ if (args.Length != 1)
 
 const uint entryPoint = 0x80001000;
 const uint branchEntry = entryPoint;
-const uint memoryEntry = entryPoint + 0x20;
+const uint memoryEntry = entryPoint + 0x30;
 
 // branch function:
 //   cmpwi r3, 42
