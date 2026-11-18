@@ -2,7 +2,7 @@
 
 An experimental browser-port project for [WiiCompiled](https://github.com/patchzyy/Wiicompiled).
 
-**Current status: version 0.7 runtime-memory adapter prototype. A checked browser-side subset of the upstream guest-memory API is being validated; this is not a playable Mario Kart Wii port.**
+**Current status: version 0.8 translated-memory helper ABI prototype. The browser build now exposes a checked subset of the upstream generated-code memory helper names; this is not a playable Mario Kart Wii port.**
 
 The goal is to investigate adapting WiiCompiled's static-recompilation output and runtime for browsers, with a single HTML launcher and repository-hosted WebAssembly resources.
 
@@ -84,13 +84,18 @@ This does not yet run upstream WiiCompiled scheduler code. The upstream runtime 
 5. **0.5 — Runtime porting:** establish the experimental cooperative-fiber host-context boundary.
 6. **0.6 — Guest memory:** sparse MEM1/MEM2 address model and alias tests.
 7. **0.7 — Runtime memory API:** checked scalar, floating-point, and bulk-copy adapter.
-8. **0.8+ — Upstream integration:** investigate the flat-memory translated-code path and remaining host services.
+8. **0.8 — Translated-memory ABI:** expose checked browser implementations of the upstream FlatRead/FlatWrite helper names.
+9. **0.9+ — Translator integration:** emit these helpers from synthetic PowerPC test blocks, then adapt remaining runtime services.
 
 ## Technical limitation
 
 Upstream WiiCompiled currently has a native desktop runtime and a separate Aurora graphics dependency. Its runtime CMake configuration explicitly targets native desktop platforms and 64-bit Clang; Emscripten support is not a switch that can simply be enabled. A substantial platform and graphics port is required.
 
 The translator is a build-time tool. This repository does not include Nintendo game data, game assets, translated game code, or a prebuilt game. Keep any game-data workflow local to the user and do not upload copyrighted game dumps or generated game content to this repository or public build services.
+
+## Version 0.8 — Translated-memory helper ABI
+
+Adds a process-wide checked guest-memory instance and browser implementations of the upstream `MemoryInline::FlatRead*`, `FlatWrite*`, and `FlatWriteRam*` helper names. This is the first interface shaped for generated C++ to call. A hand-written generated-code-style smoke block validates reads, writes, aliases, and fault latching. It is not yet output from the upstream translator; direct pointers, the native 4 GiB mapping, MMIO/HLE, deferred reads, executable-write guards, and hardware-specific PowerPC float narrowing remain unported. See [the v0.8 ABI notes](docs/v0.8-translated-memory-abi.md).
 
 ## Upstream licensing
 

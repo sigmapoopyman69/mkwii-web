@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#101014">
   <meta name="description" content="WiiCompiled Web — browser-based WebAssembly port foundation.">
-  <title>WiiCompiled Web 0.7</title>
+  <title>WiiCompiled Web 0.8</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <style>
     :root{color-scheme:dark;--bg:#101014;--panel:#19191f;--line:#30303a;--red:#e53945;--muted:#a3a3ad;--text:#f5f5f7}
@@ -24,7 +24,7 @@
 </head>
 <body>
 <main>
-  <header class="brand"><div class="mark">W</div><h1>WiiCompiled Web</h1><p class="sub">Browser port · version 0.7 runtime-memory port prototype</p></header>
+  <header class="brand"><div class="mark">W</div><h1>WiiCompiled Web</h1><p class="sub">Browser port · version 0.8 translated-memory ABI prototype</p></header>
   <section class="panel">
     <div class="screen">
       <canvas id="gpu-canvas" aria-label="Live WebGPU graphics test"></canvas>
@@ -69,8 +69,8 @@
       <div id="stored-files" class="adapter-value" style="margin-top:10px">No files stored.</div>
       <p class="note">WASM mounting is a prototype for files up to 128 MiB. Large game images need a streaming filesystem design before they can be used by the game runtime.</p>
     </section>
-    <p class="note">Version 0.7 adds a checked runtime-memory API adapter with 8/16/32/64-bit access, PowerPC big-endian floating-point access, and bulk guest-memory copies. The full upstream translated-code memory path and game runtime are not connected.</p>
-    <pre class="log" id="log" aria-live="polite">WiiCompiled Web 0.7
+    <p class="note">Version 0.8 adds a checked translated-memory helper ABI using upstream FlatRead/FlatWrite helper names. This is a transitional codegen interface, not a full translated game runtime.</p>
+    <pre class="log" id="log" aria-live="polite">WiiCompiled Web 0.8
 Browser platform adapter ready.
 No game data is included.</pre>
   </section>
@@ -399,7 +399,7 @@ No game data is included.</pre>
     title.textContent = "Initializing browser platform";
     message.textContent = "Loading the compiled C++ platform adapter from this GitHub Pages repository.";
     const loaderURL = new URL("mkwii-web.js", ASSET_BASE);
-    loaderURL.searchParams.set("build", "0.7");
+    loaderURL.searchParams.set("build", "0.8");
     write("Loading " + loaderURL.href);
     try {
       const script = document.createElement("script");
@@ -415,7 +415,7 @@ No game data is included.</pre>
       const module = await withTimeout(createMkwiiModule({
         locateFile: path => {
           const assetURL = new URL(path, ASSET_BASE);
-          assetURL.searchParams.set("build", "0.7");
+          assetURL.searchParams.set("build", "0.8");
           return assetURL.href;
         },
         print: line => write(String(line)),
@@ -444,7 +444,7 @@ No game data is included.</pre>
       const graphics = await startWebGpuRenderer();
       if (graphics.ok) {
         setState("ok","WebGPU renderer running");
-        title.textContent = "Version 0.7 runtime-memory prototype initialized";
+        title.textContent = "Version 0.8 translated-memory ABI prototype initialized";
         message.textContent = "WebGPU graphics are running. Controller monitoring and the user-initiated audio test are ready.";
         button.textContent = "Platform adapters running";
       } else {
@@ -474,7 +474,7 @@ No game data is included.</pre>
       .then(keys => Promise.all(keys
         .filter(key => key.startsWith("mkwii-web-assets-"))
         .map(key => caches.delete(key))))
-      .then(() => write("Service worker disabled; using normal network loading with v0.7 cache-busted assets."))
+      .then(() => write("Service worker disabled; using normal network loading with v0.8 cache-busted assets."))
       .catch(error => write("Service-worker cleanup unavailable: " + error.message));
   }
 })();
