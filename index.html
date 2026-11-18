@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#101014">
   <meta name="description" content="WiiCompiled Web — browser-based WebAssembly port foundation.">
-  <title>WiiCompiled Web 0.4</title>
+  <title>WiiCompiled Web 0.5</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <style>
     :root{color-scheme:dark;--bg:#101014;--panel:#19191f;--line:#30303a;--red:#e53945;--muted:#a3a3ad;--text:#f5f5f7}
@@ -24,7 +24,7 @@
 </head>
 <body>
 <main>
-  <header class="brand"><div class="mark">W</div><h1>WiiCompiled Web</h1><p class="sub">Browser port · version 0.4 storage/filesystem adapters</p></header>
+  <header class="brand"><div class="mark">W</div><h1>WiiCompiled Web</h1><p class="sub">Browser port · version 0.5 runtime port prototype</p></header>
   <section class="panel">
     <div class="screen">
       <canvas id="gpu-canvas" aria-label="Live WebGPU graphics test"></canvas>
@@ -69,7 +69,7 @@
       <div id="stored-files" class="adapter-value" style="margin-top:10px">No files stored.</div>
       <p class="note">WASM mounting is a prototype for files up to 128 MiB. Large game images need a streaming filesystem design before they can be used by the game runtime.</p>
     </section>
-    <p class="note">Version 0.4 adds browser-local IndexedDB persistence, local file storage, and a bounded Emscripten virtual-filesystem mount. Game runtime, controls, and game audio are not connected.</p>
+    <p class="note">Version 0.5 adds an experimental Emscripten cooperative-fiber backend with a startup context-switch test. Browser-local storage, graphics, input detection, and audio testing remain platform prototypes; the upstream game runtime is not connected.</p>
     <pre class="log" id="log" aria-live="polite">WiiCompiled Web 0.1
 Browser platform adapter ready.
 No game data is included.</pre>
@@ -438,7 +438,7 @@ No game data is included.</pre>
       const graphics = await startWebGpuRenderer();
       if (graphics.ok) {
         setState("ok","WebGPU renderer running");
-        title.textContent = "Version 0.4 platform adapters initialized";
+        title.textContent = "Version 0.5 runtime prototype initialized";
         message.textContent = "WebGPU graphics are running. Controller monitoring and the user-initiated audio test are ready.";
         button.textContent = "Platform adapters running";
       } else {
