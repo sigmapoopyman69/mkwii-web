@@ -2,7 +2,7 @@
 
 An experimental browser-port project for [WiiCompiled](https://github.com/patchzyy/Wiicompiled).
 
-**Current status: version 0.8 translated-memory helper ABI prototype. The browser build now exposes a checked subset of the upstream generated-code memory helper names; this is not a playable Mario Kart Wii port.**
+**Current status: version 0.9 translator execution prototype. GitHub Actions runs the upstream PowerPC translator on a synthetic two-instruction program, compiles its generated C++ with Emscripten, and the browser executes it. This is not a playable Mario Kart Wii port.**
 
 The goal is to investigate adapting WiiCompiled's static-recompilation output and runtime for browsers, with a single HTML launcher and repository-hosted WebAssembly resources.
 
@@ -85,7 +85,8 @@ This does not yet run upstream WiiCompiled scheduler code. The upstream runtime 
 6. **0.6 — Guest memory:** sparse MEM1/MEM2 address model and alias tests.
 7. **0.7 — Runtime memory API:** checked scalar, floating-point, and bulk-copy adapter.
 8. **0.8 — Translated-memory ABI:** expose checked browser implementations of the upstream FlatRead/FlatWrite helper names.
-9. **0.9+ — Translator integration:** emit these helpers from synthetic PowerPC test blocks, then adapt remaining runtime services.
+9. **0.9 — First translated code:** use the upstream translator to emit a synthetic PowerPC function, compile it into the browser WASM module, and execute it.
+10. **0.10+ — Broader translation:** add translated loads/stores, branches, and additional instruction families with runtime compatibility tests.
 
 ## Technical limitation
 
@@ -96,6 +97,10 @@ The translator is a build-time tool. This repository does not include Nintendo g
 ## Version 0.8 — Translated-memory helper ABI
 
 Adds a process-wide checked guest-memory instance and browser implementations of the upstream `MemoryInline::FlatRead*`, `FlatWrite*`, and `FlatWriteRam*` helper names. This is the first interface shaped for generated C++ to call. A hand-written generated-code-style smoke block validates reads, writes, aliases, and fault latching. It is not yet output from the upstream translator; direct pointers, the native 4 GiB mapping, MMIO/HLE, deferred reads, executable-write guards, and hardware-specific PowerPC float narrowing remain unported. See [the v0.8 ABI notes](docs/v0.8-translated-memory-abi.md).
+
+## Version 0.9 — First upstream-translated function
+
+The hosted build checks out WiiCompiled at pinned revision `03151e0a3429adb92dd9082fb815fbf194df3c1d`, builds its .NET translator core, and translates a synthetic PowerPC function containing `addi r3,r3,7` followed by `blr`. Emscripten compiles the generated C++ into the same browser WebAssembly module. At startup, a CPU-context wrapper calls the generated function with r3=35 and verifies r3=42. No game binary or game assets are used. See [the v0.9 translator smoke notes](docs/v0.9-translator-smoke.md).
 
 ## Upstream licensing
 

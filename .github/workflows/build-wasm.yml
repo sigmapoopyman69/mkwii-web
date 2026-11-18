@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - "src/**"
+      - "tools/translator-smoke/**"
       - "CMakeLists.txt"
       - ".github/workflows/build-wasm.yml"
   workflow_dispatch:
@@ -18,13 +19,36 @@ concurrency:
 
 jobs:
   build:
-    name: Compile browser resources
+    name: Translate PowerPC smoke function and compile browser resources
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Check out pinned upstream translator
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone https://github.com/patchzyy/Wiicompiled.git "$RUNNER_TEMP/Wiicompiled"
+          git -C "$RUNNER_TEMP/Wiicompiled" checkout 03151e0a3429adb92dd9082fb815fbf194df3c1d
+          echo "Upstream translator revision: $(git -C "$RUNNER_TEMP/Wiicompiled" rev-parse HEAD)"
+
+      - name: Generate C++ from synthetic PowerPC instructions
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p generated
+          dotnet run --project tools/translator-smoke/TranslatorSmoke.csproj \
+            -p:UpstreamRoot="$RUNNER_TEMP/Wiicompiled" -- \
+            generated/translated_addi_smoke.cpp
+          test -s generated/translated_addi_smoke.cpp
 
       - name: Install Emscripten SDK
         uses: mymindstorm/setup-emsdk@v14
@@ -33,7 +57,9 @@ jobs:
           actions-cache-folder: emsdk-cache
 
       - name: Configure
-        run: emcmake cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+        run: |
+          emcmake cmake -S . -B build -DCMAKE_BUILD_TYPE=Release \
+            -DWII_COMPILED_UPSTREAM_ROOT="$RUNNER_TEMP/Wiicompiled"
 
       - name: Compile WebAssembly
         run: cmake --build build --parallel 2
@@ -55,7 +81,7 @@ jobs:
             echo "Browser resources are already up to date."
             exit 0
           fi
-          git commit -m "Build WebAssembly browser resources"
+          git commit -m "Build v0.9 translated PowerPC smoke test"
           for attempt in 1 2 3 4 5; do
             git fetch origin main
             git rebase origin/main

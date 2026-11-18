@@ -5,8 +5,9 @@ if(NOT EMSCRIPTEN)
   message(FATAL_ERROR "This project is currently configured for Emscripten. Use emcmake cmake.")
 endif()
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(WII_COMPILED_UPSTREAM_ROOT "" CACHE PATH "Checkout of upstream WiiCompiled used for translator-generated code")
 
 add_executable(mkwii-web
   src/main.cpp
@@ -17,6 +18,21 @@ add_executable(mkwii-web
   src/platform/browser_translated_memory.cpp
 )
 target_include_directories(mkwii-web PRIVATE src)
+
+set(TRANSLATED_SMOKE_SOURCE "${CMAKE_SOURCE_DIR}/generated/translated_addi_smoke.cpp")
+if(WII_COMPILED_UPSTREAM_ROOT AND EXISTS "${TRANSLATED_SMOKE_SOURCE}")
+  target_sources(mkwii-web PRIVATE
+    "${TRANSLATED_SMOKE_SOURCE}"
+    src/generated/translator_smoke_wrapper.cpp
+  )
+  target_include_directories(mkwii-web PRIVATE
+    "${WII_COMPILED_UPSTREAM_ROOT}/runtime/include"
+  )
+  target_compile_definitions(mkwii-web PRIVATE WII_COMPILED_HAS_TRANSLATOR_SMOKE=1)
+  message(STATUS "Building actual upstream-translator-generated PowerPC smoke function")
+else()
+  message(WARNING "Upstream translator smoke source is absent; this build will not execute translated code")
+endif()
 
 set_target_properties(mkwii-web PROPERTIES
   OUTPUT_NAME "mkwii-web"
