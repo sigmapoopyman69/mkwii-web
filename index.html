@@ -399,7 +399,7 @@ No game data is included.</pre>
     title.textContent = "Initializing browser platform";
     message.textContent = "Loading the compiled C++ platform adapter from this GitHub Pages repository.";
     const loaderURL = new URL("mkwii-web.js", ASSET_BASE);
-    loaderURL.searchParams.set("build", "0.10");
+    loaderURL.searchParams.set("build", "d42ec867");
     write("Loading " + loaderURL.href);
     try {
       const script = document.createElement("script");
@@ -474,7 +474,7 @@ No game data is included.</pre>
       .then(keys => Promise.all(keys
         .filter(key => key.startsWith("mkwii-web-assets-"))
         .map(key => caches.delete(key))))
-      .then(() => write("Service worker disabled; using normal network loading with v0.10 cache-busted assets."))
+      .then(() => write("Service worker disabled; using normal network loading with v0.10.1 cache-busted assets."))
       .catch(error => write("Service-worker cleanup unavailable: " + error.message));
   }
 })();
