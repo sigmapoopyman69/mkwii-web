@@ -17,9 +17,11 @@ public:
     bool Read8(std::uint32_t address, std::uint8_t& value) const noexcept;
     bool Read16(std::uint32_t address, std::uint16_t& value) const noexcept;
     bool Read32(std::uint32_t address, std::uint32_t& value) const noexcept;
+    bool ReadBytes(std::uint32_t address, void* destination, std::size_t length) const noexcept;
     bool Write8(std::uint32_t address, std::uint8_t value) noexcept;
     bool Write16(std::uint32_t address, std::uint16_t value) noexcept;
     bool Write32(std::uint32_t address, std::uint32_t value) noexcept;
+    bool WriteBytes(std::uint32_t address, const void* source, std::size_t length) noexcept;
     std::size_t AllocatedPageCount() const noexcept;
 private:
     struct Impl;

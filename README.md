@@ -2,7 +2,7 @@
 
 An experimental browser-port project for [WiiCompiled](https://github.com/patchzyy/Wiicompiled).
 
-**Current status: version 0.6 guest-memory port prototype. Sparse Wii RAM address mapping is being validated; this is not a playable Mario Kart Wii port.**
+**Current status: version 0.7 runtime-memory adapter prototype. A checked browser-side subset of the upstream guest-memory API is being validated; this is not a playable Mario Kart Wii port.**
 
 The goal is to investigate adapting WiiCompiled's static-recompilation output and runtime for browsers, with a single HTML launcher and repository-hosted WebAssembly resources.
 
@@ -99,3 +99,10 @@ WiiCompiled is licensed under GPL-3.0. Any code incorporated from WiiCompiled mu
 Adds an independently written, sparse WebAssembly-compatible model of Wii MEM1 (24 MiB) and MEM2 (128 MiB). Physical, cached, and uncached address aliases share the same backing pages. Memory pages allocate on first write, scalar accessors use PowerPC big-endian byte order, and invalid accesses are rejected. A startup smoke test checks aliasing, bounds, sparse allocation, and reset.
 
 This is not yet upstream's Memory/MemoryInline implementation and does not implement MMIO, deferred framebuffer reads, executable write guards, or direct translated-code pointers. See [the v0.6 guest-memory notes](docs/v0.6-guest-memory.md).
+
+
+## Version 0.7 — Runtime memory API adapter
+
+Adds a checked browser-side adapter for the portable subset of WiiCompiled's guest-memory contract: 8/16/32/64-bit scalar reads and writes, 32/64-bit floating-point values using PowerPC big-endian byte order, range checks, and bulk copies between guest memory and host buffers. The sparse backing store now supports multi-page byte ranges without requiring a contiguous host pointer.
+
+The adapter is independently implemented and tested against the upstream API shape; it does not import the upstream runtime. Raw guest pointers and the translated-code 4 GiB flat-memory fast path are deliberately not exposed. Upstream uses fixed virtual-address reservations, page protection, MMIO/deferred-read traps, and executable-write guards; those mechanisms need a separate WebAssembly design before translated code can be integrated. See [the v0.7 runtime-memory notes](docs/v0.7-runtime-memory.md).

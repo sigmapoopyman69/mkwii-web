@@ -4,6 +4,7 @@
 #include "platform/browser_platform.h"
 #include "platform/browser_host_context.h"
 #include "platform/browser_guest_memory.h"
+#include "platform/browser_runtime_memory.h"
 
 extern "C" {
 
@@ -26,12 +27,14 @@ double mkwii_web_uptime_ms() {
 
 int main() {
     const auto capabilities = BrowserPlatform::GetCapabilities();
-    std::puts("WiiCompiled Web 0.6: browser guest-memory prototype initialized.");
+    std::puts("WiiCompiled Web 0.7: runtime memory adapter prototype initialized.");
     std::printf("Browser capability flags: %u\n", capabilities);
-    std::puts("Game runtime and graphics backend are not connected yet.");
+    std::puts("Checked runtime memory API subset is connected; translated game runtime is not connected yet.");
     const bool fiberSmokeTest = BrowserHostContext::RunSmokeTest();
     std::printf("Browser cooperative-fiber smoke test: %s\n", fiberSmokeTest ? "PASS" : "FAIL");
     const bool memorySmokeTest = BrowserGuestMemory::RunSmokeTest();
     std::printf("Browser guest-memory smoke test: %s\n", memorySmokeTest ? "PASS" : "FAIL");
-    return (fiberSmokeTest && memorySmokeTest) ? 0 : 1;
+    const bool runtimeMemorySmokeTest = BrowserRuntimeMemory::RunSmokeTest();
+    std::printf("Browser runtime-memory API smoke test: %s\\n", runtimeMemorySmokeTest ? "PASS" : "FAIL");
+    return (fiberSmokeTest && memorySmokeTest && runtimeMemorySmokeTest) ? 0 : 1;
 }
