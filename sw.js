@@ -1,4 +1,4 @@
-const CACHE_NAME = "mkwii-web-assets-v2";
+const CACHE_NAME = "mkwii-web-assets-v3";
 const APP_FILES = [
   "./",
   "./index.html",
@@ -26,20 +26,30 @@ self.addEventListener("activate", event => {
 });
 
 self.addEventListener("fetch", event => {
-  const url = new URL(event.request.url);
-  if (url.origin !== self.location.origin || event.request.method !== "GET") return;
-  if (url.pathname.includes("/dist/") ||
-      url.pathname.endsWith("/index.html") ||
-      url.pathname.endsWith("/manifest.webmanifest") ||
-      url.pathname.endsWith("/")) {
-    event.respondWith(
-      caches.match(event.request).then(cached => cached || fetch(event.request).then(response => {
-        if (response.ok) {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request,copy));
-        }
-        return response;
-      }))
-    );
-  }
+  const request = event.request;
+  const url = new URL(request.url);
+  if (url.origin !== self.location.origin || request.method !== "GET") return;
+
+  const isAppAsset =
+    url.pathname.includes("/dist/") ||
+    url.pathname.endsWith("/index.html") ||
+    url.pathname.endsWith("/manifest.webmanifest") ||
+    url.pathname.endsWith("/");
+
+  if (!isAppAsset) return;
+
+  // Prefer the latest deployed files while online; keep the cached copy as an
+  // offline fallback. This prevents an old HTML/JS pair from surviving deploys.
+  event.respondWith((async () => {
+    const cache = await caches.open(CACHE_NAME);
+    try {
+      const fresh = await fetch(request);
+      if (fresh.ok) await cache.put(request, fresh.clone());
+      return fresh;
+    } catch (error) {
+      const cached = await cache.match(request);
+      if (cached) return cached;
+      throw error;
+    }
+  })());
 });
