@@ -2,7 +2,7 @@
 
 An experimental browser-port project for [WiiCompiled](https://github.com/patchzyy/Wiicompiled).
 
-**Current status: version 0.4 browser storage and virtual-filesystem adapters. This is not a playable Mario Kart Wii port.**
+**Current status: version 0.5 runtime-porting prototype. The Emscripten cooperative-fiber adapter is being validated; this is not a playable Mario Kart Wii port.**
 
 The goal is to investigate adapting WiiCompiled's static-recompilation output and runtime for browsers, with a single HTML launcher and repository-hosted WebAssembly resources.
 
@@ -69,13 +69,19 @@ The output is written to `dist/`.
 - `.github/workflows/build-wasm.yml` — remote build and resource publishing.
 - `sw.js` — same-origin offline resource cache.
 
+## Version 0.5 — Runtime porting prototype
+
+The first runtime primitive being adapted is cooperative host-context switching. The browser build now includes an Emscripten-fiber implementation with separate C/Asyncify stacks and a startup smoke test that switches into a fiber and back twice.
+
+This does not yet run upstream WiiCompiled scheduler code. The upstream runtime still depends on native guest-memory mapping, Aurora, SDL, and desktop host services. See [the v0.5 porting notes](docs/v0.5-runtime-porting.md) for the dependency audit and next gates.
+
 ## Roadmap
 
 1. **0.1 — Browser platform foundation:** API detection, monotonic clock, build pipeline.
 2. **0.2 — Browser graphics prototype:** establish a real WebGPU device, surface, and clear-frame loop.
 3. **0.3 — Input/audio adapters:** browser gamepad mapping and Web Audio output.
-4. **0.4 — Runtime dependency port:** identify and adapt the minimum portable WiiCompiled runtime components.
-5. **0.5+ — Translated-code integration:** build and run compatible generated code after the runtime and graphics layers are ready.
+4. **0.4 — Browser storage adapters:** IndexedDB persistence and bounded virtual-filesystem mounting.
+5. **0.5 — Runtime porting:** replace native fibers and begin the guest-memory port.\n6. **0.6+ — Translated-code integration:** only after runtime, graphics, I/O, audio, and input are ready.
 
 ## Technical limitation
 
