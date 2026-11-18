@@ -104,9 +104,21 @@ No game data is included.</pre>
         print: line => write(String(line)),
         printErr: line => write("ERROR: " + String(line))
       });
-      const getStatus = module.cwrap("mkwii_web_status","number",[]);
-      const getCapabilities = module.cwrap("mkwii_web_capabilities","number",[]);
-      const getUptime = module.cwrap("mkwii_web_uptime_ms","number",[]);
+      // Call the explicitly exported C functions directly. This avoids any
+      // dependency on Emscripten's cwrap helper or older frontend APIs.
+      const getStatus = module._mkwii_web_status;
+      const getCapabilities = module._mkwii_web_capabilities;
+      const getUptime = module._mkwii_web_uptime_ms;
+      if (typeof getStatus !== "function" ||
+          typeof getCapabilities !== "function" ||
+          typeof getUptime !== "function") {
+        throw new Error(
+          "The WASM module is missing an exported function. " +
+          "status=" + typeof getStatus +
+          ", capabilities=" + typeof getCapabilities +
+          ", uptime=" + typeof getUptime
+        );
+      }
       if (getStatus() !== 1) throw new Error("The C++ platform adapter returned an unexpected status.");
       showCapabilities(getCapabilities());
       write("Browser clock: " + getUptime().toFixed(1) + " ms");
