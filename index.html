@@ -48,7 +48,7 @@ This is an engine bring-up test, not a playable game yet.</pre>
   const message = document.getElementById("screen-message");
   const log = document.getElementById("log");
   let started = false;
-  function write(line) { log.textContent += "\\n" + line; log.scrollTop = log.scrollHeight; }
+  function write(line) { log.textContent += "\n" + line; log.scrollTop = log.scrollHeight; }
   function setState(kind, label) { dot.className = "dot" + (kind ? " " + kind : ""); status.textContent = label; }
   async function boot() {
     if (started) return;
