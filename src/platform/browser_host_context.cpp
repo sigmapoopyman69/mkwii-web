@@ -89,7 +89,7 @@ Handle Create(std::size_t stackSize, Entry entry, void* argument) {
     if (!context) return nullptr;
 
     context->cStackSize = (stackSize + 15u) & ~std::size_t(15u);
-    context->cStack = std::aligned_alloc(16, context->cStackSize);
+    // malloc provides max_align_t alignment, which is sufficient for Emscripten fibers.\n    context->cStack = std::malloc(context->cStackSize);
     context->asyncifyStack = std::malloc(kAsyncifyStackSize);
     context->entry = entry;
     context->argument = argument;
