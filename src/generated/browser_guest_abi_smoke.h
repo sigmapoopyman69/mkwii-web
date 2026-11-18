@@ -5,6 +5,7 @@
 // Desktop SIMD/FP-control headers are intentionally excluded.
 #include <cstdint>
 #include "platform/browser_translated_memory.h"
+#include "isa/ppc_isa_cr.h"
 
 #ifndef MKW_RESTRICT
 #define MKW_RESTRICT __restrict
