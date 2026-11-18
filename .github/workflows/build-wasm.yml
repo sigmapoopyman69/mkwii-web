@@ -1,0 +1,49 @@
+name: Build WebAssembly
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "CMakeLists.txt"
+      - ".github/workflows/build-wasm.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wasm-build-main
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Compile browser resources
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install Emscripten SDK
+        uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: 3.1.64
+          actions-cache-folder: emsdk-cache
+
+      - name: Configure
+        run: emcmake cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Compile WebAssembly
+        run: cmake --build build --parallel 2
+
+      - name: Verify outputs
+        run: |
+          test -s dist/mkwii-web.js
+          test -s dist/mkwii-web.wasm
+          ls -lh dist/
+
+      - name: Commit generated browser resources
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Build WebAssembly browser resources"
+          file_pattern: "dist/*.js dist/*.wasm"
