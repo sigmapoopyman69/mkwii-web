@@ -1,7 +1,5 @@
-const CACHE_NAME = "mkwii-web-assets-v4";
+const CACHE_NAME = "mkwii-web-assets-v5";
 
-// Do not download the whole application during service-worker installation.
-// In particular, a large WASM file must not block activation.
 self.addEventListener("install", event => {
   event.waitUntil(self.skipWaiting());
 });
@@ -29,20 +27,23 @@ self.addEventListener("fetch", event => {
 
   if (!isAppAsset) return;
 
-  // Network-first: return the response as soon as it arrives. Cache the clone
-  // in the background so large JS/WASM downloads cannot hold up page loading.
-  event.respondWith((async () => {
-    const cache = await caches.open(CACHE_NAME);
-    try {
-      const fresh = await fetch(request);
-      if (fresh.ok) {
-        event.waitUntil(cache.put(request, fresh.clone()).catch(() => {}));
-      }
-      return fresh;
-    } catch (error) {
+  const cacheUpdate = fetch(request).then(async response => {
+    if (response.ok) {
+      const cache = await caches.open(CACHE_NAME);
+      await cache.put(request, response.clone());
+    }
+    return response;
+  });
+
+  // Register both lifetime promises synchronously while handling the event.
+  // Never call event.waitUntil() from inside a later async continuation.
+  event.waitUntil(cacheUpdate.then(() => undefined).catch(() => {}));
+  event.respondWith(
+    cacheUpdate.catch(async () => {
+      const cache = await caches.open(CACHE_NAME);
       const cached = await cache.match(request);
       if (cached) return cached;
-      throw error;
-    }
-  })());
+      throw new Error("Network unavailable and no cached app response exists.");
+    })
+  );
 });
