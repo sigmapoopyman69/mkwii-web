@@ -2,11 +2,11 @@
 
 An experimental browser-port project for [WiiCompiled](https://github.com/patchzyy/Wiicompiled).
 
-**Current status: version 0.2 WebGPU graphics prototype. This is not a playable Mario Kart Wii port.**
+**Current status: version 0.3 browser input/audio adapters. This is not a playable Mario Kart Wii port.**
 
 The goal is to investigate adapting WiiCompiled's static-recompilation output and runtime for browsers, with a single HTML launcher and repository-hosted WebAssembly resources.
 
-## Version 0.2
+## Version 0.3
 
 This milestone replaces the original hello-world-only C++ source with the first browser host-services boundary:
 
@@ -16,7 +16,13 @@ This milestone replaces the original hello-world-only C++ source with the first 
 - Exported WebAssembly functions so the launcher can display the detected capabilities.
 - GitHub Actions compiles the module and commits the generated `dist/` resources to this repository.
 
-The launcher now requests a real WebGPU adapter and device, configures a canvas surface, compiles a small WGSL shader pipeline, and submits an animated full-screen test frame. This validates the browser graphics path only; it is not the WiiCompiled game renderer and does not execute translated Wii game code. Audio and controller input are still not connected.
+The launcher retains the real WebGPU adapter/device, canvas surface, WGSL shader pipeline, and animated frame loop from v0.2. It now also:
+- Polls the browser Gamepad API and displays the connected controller, pressed button indices, and two stick pairs.
+- Handles gamepad connect/disconnect events.
+- Initializes Web Audio only after the user presses the audio test button, then plays a short 440 Hz test tone.
+- Reports unavailable APIs and audio initialization errors in the page.
+
+These are browser adapter tests, not Mario Kart controls or game audio. No translated Wii game code is executed.
 
 ## Chromebook-friendly workflow
 
