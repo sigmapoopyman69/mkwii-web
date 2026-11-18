@@ -27,19 +27,20 @@ self.addEventListener("fetch", event => {
 
   if (!isAppAsset) return;
 
-  const cacheUpdate = fetch(request).then(async response => {
-    if (response.ok) {
-      const cache = await caches.open(CACHE_NAME);
-      await cache.put(request, response.clone());
-    }
-    return response;
-  });
+  const networkResponse = fetch(request);
 
-  // Register both lifetime promises synchronously while handling the event.
-  // Never call event.waitUntil() from inside a later async continuation.
-  event.waitUntil(cacheUpdate.then(() => undefined).catch(() => {}));
+  // Register cache work synchronously, but do not make page loading wait for it.
+  event.waitUntil(
+    networkResponse.then(async response => {
+      if (response.ok) {
+        const cache = await caches.open(CACHE_NAME);
+        await cache.put(request, response.clone());
+      }
+    }).catch(() => {})
+  );
+
   event.respondWith(
-    cacheUpdate.catch(async () => {
+    networkResponse.catch(async () => {
       const cache = await caches.open(CACHE_NAME);
       const cached = await cache.match(request);
       if (cached) return cached;
