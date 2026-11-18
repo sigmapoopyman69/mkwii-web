@@ -31,5 +31,7 @@ int main() {
     std::puts("Game runtime and graphics backend are not connected yet.");
     const bool fiberSmokeTest = BrowserHostContext::RunSmokeTest();
     std::printf("Browser cooperative-fiber smoke test: %s\n", fiberSmokeTest ? "PASS" : "FAIL");
-    return 0;
+    const bool memorySmokeTest = BrowserGuestMemory::RunSmokeTest();
+    std::printf("Browser guest-memory smoke test: %s\\n", memorySmokeTest ? "PASS" : "FAIL");
+    return (fiberSmokeTest && memorySmokeTest) ? 0 : 1;
 }
