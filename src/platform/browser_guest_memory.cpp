@@ -32,11 +32,11 @@ bool Memory::Contains(std::uint32_t a,std::size_t n) const noexcept {
  for(std::size_t i=0;i<n;++i){Location l{};if(static_cast<std::uint64_t>(a)+i>0xFFFFFFFFull||!Decode(static_cast<std::uint32_t>(a+i),l))return false;}return true;
 }
 bool Memory::Read8(std::uint32_t a,std::uint8_t& v) const noexcept {Location l{};if(!Decode(a,l))return false;auto p=impl_->Find(l.region,l.offset);v=p?(*p)[l.offset%kPageSize]:0;return true;}
-bool Memory::Read16(std::uint32_t a,std::uint16_t& v) const noexcept {std::uint8_t x=0,y=0;if(!Read8(a,x)||!Read8(a+1,y))return false;v=(std::uint16_t(x)<<8)|y;return true;}
-bool Memory::Read32(std::uint32_t a,std::uint32_t& v) const noexcept {std::uint8_t x=0,y=0,z=0,w=0;if(!Read8(a,x)||!Read8(a+1,y)||!Read8(a+2,z)||!Read8(a+3,w))return false;v=(std::uint32_t(x)<<24)|(std::uint32_t(y)<<16)|(std::uint32_t(z)<<8)|w;return true;}
+bool Memory::Read16(std::uint32_t a,std::uint16_t& v) const noexcept {if(!Contains(a,2))return false;std::uint8_t x=0,y=0;if(!Read8(a,x)||!Read8(a+1,y))return false;v=(std::uint16_t(x)<<8)|y;return true;}
+bool Memory::Read32(std::uint32_t a,std::uint32_t& v) const noexcept {if(!Contains(a,4))return false;std::uint8_t x=0,y=0,z=0,w=0;if(!Read8(a,x)||!Read8(a+1,y)||!Read8(a+2,z)||!Read8(a+3,w))return false;v=(std::uint32_t(x)<<24)|(std::uint32_t(y)<<16)|(std::uint32_t(z)<<8)|w;return true;}
 bool Memory::Write8(std::uint32_t a,std::uint8_t v) noexcept {Location l{};if(!Decode(a,l))return false;auto p=impl_->Ensure(l.region,l.offset);if(!p)return false;(*p)[l.offset%kPageSize]=v;return true;}
-bool Memory::Write16(std::uint32_t a,std::uint16_t v) noexcept {return Write8(a,std::uint8_t(v>>8))&&Write8(a+1,std::uint8_t(v));}
-bool Memory::Write32(std::uint32_t a,std::uint32_t v) noexcept {return Write8(a,std::uint8_t(v>>24))&&Write8(a+1,std::uint8_t(v>>16))&&Write8(a+2,std::uint8_t(v>>8))&&Write8(a+3,std::uint8_t(v));}
+bool Memory::Write16(std::uint32_t a,std::uint16_t v) noexcept {if(!Contains(a,2))return false;return Write8(a,std::uint8_t(v>>8))&&Write8(a+1,std::uint8_t(v));}
+bool Memory::Write32(std::uint32_t a,std::uint32_t v) noexcept {if(!Contains(a,4))return false;return Write8(a,std::uint8_t(v>>24))&&Write8(a+1,std::uint8_t(v>>16))&&Write8(a+2,std::uint8_t(v>>8))&&Write8(a+3,std::uint8_t(v));}
 std::size_t Memory::AllocatedPageCount() const noexcept {std::size_t n=0;for(const auto& p:impl_->mem1)if(p)++n;for(const auto& p:impl_->mem2)if(p)++n;return n;}
 bool RunSmokeTest() noexcept {
  Memory m;std::uint32_t v=0;std::uint16_t h=0;
