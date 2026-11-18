@@ -1,0 +1,8 @@
+{
+  "name": "WiiCompiled Web",
+  "short_name": "WiiCompiled",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#101014",
+  "theme_color": "#101014"
+}
