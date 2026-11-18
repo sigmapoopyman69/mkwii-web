@@ -55,6 +55,20 @@
       <p id="audio-status">Audio is not started. Browser audio requires a user gesture.</p>
       <button id="audio-test" type="button">Initialize audio &amp; play test tone</button>
     </section>
+
+    <section class="adapter">
+      <h3>Browser storage &amp; virtual filesystem</h3>
+      <p id="storage-status">IndexedDB adapter is ready to initialize. Files selected here stay in this browser; they are not uploaded.</p>
+      <div class="adapter-grid">
+        <div class="cap"><span>Storage estimate</span><span id="storage-estimate" class="adapter-value">Not checked</span></div>
+        <div class="cap"><span>Stored files</span><span id="storage-count" class="adapter-value">0</span></div>
+      </div>
+      <button id="storage-test" type="button">Test persistent settings storage</button>
+      <label for="local-file" class="note" style="display:block;margin:12px 0 6px">Select a file to keep locally in this browser</label>
+      <input id="local-file" type="file" style="width:100%;color:var(--muted);font-size:13px">
+      <div id="stored-files" class="adapter-value" style="margin-top:10px">No files stored.</div>
+      <p class="note">WASM mounting is a prototype for files up to 128 MiB. Large game images need a streaming filesystem design before they can be used by the game runtime.</p>
+    </section>
     <p class="note">Version 0.3 adds live browser gamepad polling and a user-initiated Web Audio test. This remains a platform adapter prototype; game controls and game audio are not connected.</p>
     <pre class="log" id="log" aria-live="polite">WiiCompiled Web 0.1
 Browser platform adapter ready.
@@ -62,6 +76,7 @@ No game data is included.</pre>
   </section>
   <footer>Unofficial community project · Requires your own legally dumped game data when game support is implemented.</footer>
 </main>
+<script src="./storage.js"></script>
 <script>
 (() => {
   "use strict";
@@ -171,6 +186,111 @@ No game data is included.</pre>
     }
   }
   document.getElementById("audio-test").addEventListener("click",playAudioTest);
+
+  let lastStoredFileId = null;
+  async function refreshStorageFiles() {
+    const statusEl = document.getElementById("storage-status");
+    const listEl = document.getElementById("stored-files");
+    try {
+      const files = await WiiWebStorage.listFiles();
+      document.getElementById("storage-count").textContent = String(files.length);
+      listEl.replaceChildren();
+      if (!files.length) {
+        listEl.textContent = "No files stored.";
+        return;
+      }
+      for (const file of files) {
+        const row = document.createElement("div");
+        row.className = "cap";
+        const info = document.createElement("span");
+        info.textContent = file.name + " · " + (file.size / 1048576).toFixed(2) + " MiB";
+        const actions = document.createElement("span");
+        actions.style.display = "flex";
+        actions.style.gap = "8px";
+        const mount = document.createElement("button");
+        mount.type = "button";
+        mount.textContent = "Mount";
+        mount.style.width = "auto";
+        mount.style.padding = "6px 9px";
+        mount.addEventListener("click", async () => {
+          try {
+            if (!window.mkwiiWebModule) throw new Error("Initialize the WebAssembly platform first.");
+            const result = await WiiWebStorage.mountFile(file.id, window.mkwiiWebModule);
+            statusEl.textContent = "Mounted " + file.name + " at " + result.path + " in the temporary WASM filesystem.";
+            write("VFS: mounted " + file.name + " at " + result.path + " (" + result.size + " bytes).");
+          } catch (error) {
+            statusEl.textContent = error.message;
+            write("VFS: " + error.message);
+          }
+        });
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.textContent = "Delete";
+        remove.style.width = "auto";
+        remove.style.padding = "6px 9px";
+        remove.style.background = "#55515a";
+        remove.addEventListener("click", async () => {
+          await WiiWebStorage.deleteFile(file.id);
+          if (lastStoredFileId === file.id) lastStoredFileId = null;
+          await refreshStorageFiles();
+          statusEl.textContent = "Deleted " + file.name + " from this browser's storage.";
+        });
+        actions.append(mount,remove);
+        row.append(info,actions);
+        listEl.append(row);
+      }
+    } catch (error) {
+      statusEl.textContent = "Storage error: " + error.message;
+    }
+  }
+  async function initializeStorageAdapter() {
+    const statusEl = document.getElementById("storage-status");
+    try {
+      await WiiWebStorage.openDatabase();
+      const estimate = await WiiWebStorage.estimateStorage();
+      document.getElementById("storage-estimate").textContent = estimate && estimate.quota
+        ? (estimate.usage / 1048576).toFixed(1) + " / " + (estimate.quota / 1048576).toFixed(0) + " MiB"
+        : "Browser-managed";
+      statusEl.textContent = "IndexedDB is ready. Selected files remain local to this browser profile.";
+      await refreshStorageFiles();
+      write("IndexedDB database opened; browser-local file store ready.");
+    } catch (error) {
+      statusEl.textContent = "IndexedDB unavailable: " + error.message;
+      write("STORAGE: " + error.message);
+    }
+  }
+  document.getElementById("storage-test").addEventListener("click", async () => {
+    const statusEl = document.getElementById("storage-status");
+    try {
+      const value = { savedAt: new Date().toISOString(), milestone: "v0.4" };
+      await WiiWebStorage.saveSetting("adapter-test", value);
+      const restored = await WiiWebStorage.loadSetting("adapter-test");
+      statusEl.textContent = restored ? "Persistent settings test passed · " + restored.savedAt : "Settings test did not return a value.";
+      write("IndexedDB settings round-trip: " + (restored ? "PASS" : "FAIL"));
+    } catch (error) {
+      statusEl.textContent = "Settings test failed: " + error.message;
+      write("STORAGE TEST: " + error.message);
+    }
+  });
+  document.getElementById("local-file").addEventListener("change", async event => {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+    const statusEl = document.getElementById("storage-status");
+    try {
+      const saved = await WiiWebStorage.saveFile(file);
+      lastStoredFileId = saved.id;
+      statusEl.textContent = "Stored " + saved.name + " locally in IndexedDB. Nothing was uploaded.";
+      write("Local file stored: " + saved.name + " (" + saved.size + " bytes).");
+      await refreshStorageFiles();
+    } catch (error) {
+      statusEl.textContent = "Could not store file: " + error.message;
+      write("FILE STORAGE: " + error.message);
+    } finally {
+      event.target.value = "";
+    }
+  });
+  initializeStorageAdapter();
+
   startGamepadMonitor();
   async function startWebGpuRenderer() {
     const canvas = document.getElementById("gpu-canvas");
@@ -295,6 +415,7 @@ No game data is included.</pre>
         print: line => write(String(line)),
         printErr: line => write("ERROR: " + String(line))
       }), 20000, "WebAssembly initialization");
+      window.mkwiiWebModule = module;
       // Call the explicitly exported C functions directly. This avoids any
       // dependency on Emscripten's cwrap helper or older frontend APIs.
       const getStatus = module._mkwii_web_status;
