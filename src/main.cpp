@@ -3,6 +3,7 @@
 
 #include "platform/browser_platform.h"
 #include "platform/browser_host_context.h"
+#include "platform/browser_guest_memory.h"
 
 extern "C" {
 
@@ -25,7 +26,7 @@ double mkwii_web_uptime_ms() {
 
 int main() {
     const auto capabilities = BrowserPlatform::GetCapabilities();
-    std::puts("WiiCompiled Web 0.5: browser runtime port prototype initialized.");
+    std::puts("WiiCompiled Web 0.6: browser guest-memory prototype initialized.");
     std::printf("Browser capability flags: %u\n", capabilities);
     std::puts("Game runtime and graphics backend are not connected yet.");
     const bool fiberSmokeTest = BrowserHostContext::RunSmokeTest();
