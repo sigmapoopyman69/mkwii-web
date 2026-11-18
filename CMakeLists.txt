@@ -12,6 +12,7 @@ add_executable(mkwii-web
   src/main.cpp
   src/platform/browser_platform.cpp
   src/platform/browser_host_context.cpp
+  src/platform/browser_guest_memory.cpp
 )
 target_include_directories(mkwii-web PRIVATE src)
 
