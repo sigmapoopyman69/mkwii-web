@@ -26,5 +26,5 @@ target_link_options(mkwii-web PRIVATE
   "-sENVIRONMENT=web"
   "-sALLOW_MEMORY_GROWTH=1"
   "-sEXPORTED_FUNCTIONS=['_main','_mkwii_web_status','_mkwii_web_capabilities','_mkwii_web_uptime_ms']"
-  "-sEXPORTED_RUNTIME_METHODS=['ccall','cwrap']"
+  "-sEXPORTED_RUNTIME_METHODS=['ccall','cwrap','FS']"
 )
