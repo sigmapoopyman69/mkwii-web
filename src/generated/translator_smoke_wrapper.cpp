@@ -14,7 +14,13 @@ extern "C" int mkwii_web_translator_smoke_test() {
     context = {};
     context.gpr[3] = 41;
     wii_compiled_translated_branch_smoke(&context);
-    if (context.gpr[4] != 9) return 2;
+    if (context.gpr[4] != 9) {
+        // Diagnostic codes identify what the translated non-equal path produced.
+        if (context.gpr[4] == 0) return 20;
+        if (context.gpr[4] == 7) return 21;
+        if (context.gpr[4] == 9) return 22;
+        return 23;
+    }
 
     // Execute translated lwz/addi/stw against the browser guest-memory adapter.
     BrowserTranslatedMemory::Backing().Reset();
