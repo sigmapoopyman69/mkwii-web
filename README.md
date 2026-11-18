@@ -2,9 +2,21 @@
 
 An experimental browser-port project for [WiiCompiled](https://github.com/patchzyy/Wiicompiled).
 
-**Current status: WebAssembly build-system bootstrap only. This is not a playable Mario Kart Wii port.**
+**Current status: version 0.1 browser-platform foundation. This is not a playable Mario Kart Wii port.**
 
-The goal is to investigate adapting WiiCompiled's static-recompilation output and runtime for browsers, with a single-file HTML launcher and browser-delivered WebAssembly resources.
+The goal is to investigate adapting WiiCompiled's static-recompilation output and runtime for browsers, with a single HTML launcher and repository-hosted WebAssembly resources.
+
+## Version 0.1
+
+This milestone replaces the original hello-world-only C++ source with the first browser host-services boundary:
+
+- A C++ browser platform module, isolated under `src/platform/`.
+- Runtime capability detection for WebGPU, Gamepad API, Web Audio, IndexedDB, shared memory isolation, and fullscreen.
+- A monotonic browser clock exposed to C++.
+- Exported WebAssembly functions so the launcher can display the detected capabilities.
+- GitHub Actions compiles the module and commits the generated `dist/` resources to this repository.
+
+These checks only detect browser APIs. They do not yet create a WebGPU device, render graphics, play audio, read controller input, or execute translated Wii game code.
 
 ## Chromebook-friendly workflow
 
@@ -13,9 +25,10 @@ No local Linux environment is required.
 1. Edit source files in the GitHub web interface.
 2. GitHub Actions builds the C++ WebAssembly module on a hosted Ubuntu runner.
 3. The workflow commits generated `dist/mkwii-web.js` and `dist/mkwii-web.wasm` files to this repository.
-4. `index.html` loads those files from this repository through jsDelivr.
+4. `index.html` loads the files from this repository's own GitHub Pages origin.
+5. `sw.js` caches the launcher and generated resources for repeat visits when served over HTTPS.
 
-After the first successful Actions run, open the GitHub Pages site (once Pages is enabled) or serve `index.html` from another static host. The launcher is intentionally a single HTML file; generated engine resources remain separate files in `dist/`.
+Enable GitHub Pages in repository Settings → Pages → Deploy from a branch → `main` → `/(root)`.
 
 ## Build manually (optional)
 
@@ -28,26 +41,28 @@ cmake --build build --parallel
 
 The output is written to `dist/`.
 
-## Current files
+## Project structure
 
-- `index.html` — single-file launcher and status UI.
-- `src/main.cpp` — tiny C++ smoke-test module.
+- `index.html` — single-file launcher and browser diagnostics.
+- `src/main.cpp` — WebAssembly entry point and exported C API.
+- `src/platform/browser_platform.h/.cpp` — browser host-services boundary.
 - `CMakeLists.txt` — Emscripten build configuration.
 - `.github/workflows/build-wasm.yml` — remote build and resource publishing.
+- `sw.js` — same-origin offline resource cache.
 
 ## Roadmap
 
-1. Establish a repeatable Emscripten build (current milestone).
-2. Audit WiiCompiled runtime dependencies and separate platform-independent game/runtime code from native OS integrations.
-3. Investigate browser-compatible SDL, graphics/WebGPU, audio, input, storage, and file-loading paths.
-4. Port the minimum runtime layer needed to execute translated game code.
-5. Add a local user-provided game-data workflow only after a technically sound and legally appropriate design exists.
+1. **0.1 — Browser platform foundation:** API detection, monotonic clock, build pipeline.
+2. **0.2 — Browser graphics prototype:** establish a real WebGPU device, surface, and clear-frame loop.
+3. **0.3 — Input/audio adapters:** browser gamepad mapping and Web Audio output.
+4. **0.4 — Runtime dependency port:** identify and adapt the minimum portable WiiCompiled runtime components.
+5. **0.5+ — Translated-code integration:** build and run compatible generated code after the runtime and graphics layers are ready.
 
-## Important technical limitation
+## Technical limitation
 
-The upstream WiiCompiled project currently targets native desktop platforms. Its runtime and Aurora graphics integration are not automatically browser-compatible just because Emscripten can compile C++. A substantial port is required. The current build only verifies that this repository can produce and load a small WebAssembly module.
+Upstream WiiCompiled currently has a native desktop runtime and a separate Aurora graphics dependency. Its runtime CMake configuration explicitly targets native desktop platforms and 64-bit Clang; Emscripten support is not a switch that can simply be enabled. A substantial platform and graphics port is required.
 
-The translator also generates game-specific C++ from a user's own game dump. This repository does not include Nintendo game data, game assets, translated game code, or a prebuilt game. Do not upload copyrighted game dumps or generated game content to this repository or public build services.
+The translator is a build-time tool. This repository does not include Nintendo game data, game assets, translated game code, or a prebuilt game. Keep any game-data workflow local to the user and do not upload copyrighted game dumps or generated game content to this repository or public build services.
 
 ## Upstream licensing
 

@@ -5,35 +5,44 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#101014">
   <meta name="description" content="WiiCompiled Web — browser-based WebAssembly port foundation.">
-  <title>WiiCompiled Web</title>
+  <title>WiiCompiled Web 0.1</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <style>
     :root{color-scheme:dark;--bg:#101014;--panel:#19191f;--line:#30303a;--red:#e53945;--muted:#a3a3ad;--text:#f5f5f7}
     *{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% -20%,#482027 0,transparent 48%),var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;display:grid;place-items:center;padding:24px}
-    main{width:min(760px,100%)}.brand{text-align:center;margin-bottom:26px}.mark{display:inline-grid;place-items:center;width:58px;height:58px;border:1px solid #71313a;border-radius:18px;background:#29171c;color:#ff6972;font-size:27px;font-weight:800;box-shadow:0 12px 50px #e5394520}
+    main{width:min(800px,100%)}.brand{text-align:center;margin-bottom:26px}.mark{display:inline-grid;place-items:center;width:58px;height:58px;border:1px solid #71313a;border-radius:18px;background:#29171c;color:#ff6972;font-size:27px;font-weight:800;box-shadow:0 12px 50px #e5394520}
     h1{font-size:clamp(28px,6vw,42px);letter-spacing:-1.5px;margin:13px 0 4px}.sub{color:var(--muted);margin:0}
     .panel{background:linear-gradient(180deg,#1d1d25,#17171d);border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:0 24px 80px #0006}
-    .screen{min-height:250px;border:1px solid #34343e;border-radius:12px;background:#09090c;display:grid;place-items:center;text-align:center;padding:24px;margin-bottom:18px}
-    .kart{font-size:42px;margin-bottom:8px}.screen h2{font-size:19px;margin:0 0 5px}.screen p{color:var(--muted);max-width:440px;margin:0}
+    .screen{min-height:210px;border:1px solid #34343e;border-radius:12px;background:#09090c;display:grid;place-items:center;text-align:center;padding:24px;margin-bottom:18px}
+    .kart{font-size:42px;margin-bottom:8px}.screen h2{font-size:19px;margin:0 0 5px}.screen p{color:var(--muted);max-width:500px;margin:0}
     .status{display:flex;align-items:center;gap:9px;color:var(--muted);font-size:13px;margin:14px 0}.dot{width:8px;height:8px;border-radius:50%;background:#e5a33b;box-shadow:0 0 12px currentColor}.dot.ok{background:#42c987}.dot.bad{background:#ed5964}
     button{width:100%;border:0;border-radius:10px;background:var(--red);color:white;font:700 15px system-ui;padding:13px 18px;cursor:pointer;transition:filter .15s,transform .15s}button:hover{filter:brightness(1.12)}button:active{transform:scale(.99)}button:disabled{opacity:.55;cursor:wait}
+    .caps{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:9px;margin:16px 0}.cap{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid #30303a;background:#111116;border-radius:9px;padding:10px 12px;font-size:13px}.cap span:last-child{font-weight:700}.yes{color:#42c987}.no{color:#ed5964}.unknown{color:#e5a33b}
     .log{margin-top:15px;max-height:130px;overflow:auto;padding:12px;border-radius:9px;background:#0c0c10;border:1px solid #292932;color:#bdbdc7;font:12px/1.5 ui-monospace,monospace;white-space:pre-wrap}
-    footer{text-align:center;color:#777783;font-size:12px;margin-top:18px}a{color:#ff858b}
+    .note{font-size:12px;color:#8e8e99;margin:12px 0 0}footer{text-align:center;color:#777783;font-size:12px;margin-top:18px}
   </style>
 </head>
 <body>
 <main>
-  <header class="brand"><div class="mark">W</div><h1>WiiCompiled Web</h1><p class="sub">A browser-based WebAssembly port project</p></header>
+  <header class="brand"><div class="mark">W</div><h1>WiiCompiled Web</h1><p class="sub">Browser port · version 0.1</p></header>
   <section class="panel">
-    <div class="screen" id="screen">
-      <div><div class="kart">🏁</div><h2 id="screen-title">Web build foundation</h2><p id="screen-message">The launcher downloads its WebAssembly resources directly from this GitHub Pages repository and stores them for repeat visits.</p></div>
+    <div class="screen">
+      <div><div class="kart">🏁</div><h2 id="screen-title">Browser platform foundation</h2><p id="screen-message">Initialize the WebAssembly module to check which browser services are available for the port.</p></div>
     </div>
-    <div class="status"><span class="dot" id="status-dot"></span><span id="status-text">Checking browser cache</span></div>
-    <button id="start" type="button">Initialize WebAssembly</button>
-    <pre class="log" id="log" aria-live="polite">WiiCompiled Web bootstrap
-Repository-hosted resources only.
-No game data is included.
-This is an engine bring-up test, not a playable game yet.</pre>
+    <div class="status"><span class="dot" id="status-dot"></span><span id="status-text">Ready to initialize</span></div>
+    <button id="start" type="button">Initialize browser platform</button>
+    <div class="caps" id="capabilities" aria-live="polite">
+      <div class="cap"><span>WebGPU</span><span class="unknown">Not checked</span></div>
+      <div class="cap"><span>Gamepad API</span><span class="unknown">Not checked</span></div>
+      <div class="cap"><span>Web Audio</span><span class="unknown">Not checked</span></div>
+      <div class="cap"><span>IndexedDB</span><span class="unknown">Not checked</span></div>
+      <div class="cap"><span>Shared memory</span><span class="unknown">Not checked</span></div>
+      <div class="cap"><span>Fullscreen</span><span class="unknown">Not checked</span></div>
+    </div>
+    <p class="note">API availability checks only. No game renderer, audio playback, controller handling, or game code is connected yet.</p>
+    <pre class="log" id="log" aria-live="polite">WiiCompiled Web 0.1
+Browser platform adapter ready.
+No game data is included.</pre>
   </section>
   <footer>Unofficial community project · Requires your own legally dumped game data when game support is implemented.</footer>
 </main>
@@ -47,43 +56,66 @@ This is an engine bring-up test, not a playable game yet.</pre>
   const title = document.getElementById("screen-title");
   const message = document.getElementById("screen-message");
   const log = document.getElementById("log");
+  const caps = document.getElementById("capabilities");
   let started = false;
   function write(line) { log.textContent += "\n" + line; log.scrollTop = log.scrollHeight; }
   function setState(kind, label) { dot.className = "dot" + (kind ? " " + kind : ""); status.textContent = label; }
+  function showCapabilities(flags) {
+    const items = [
+      ["WebGPU",1],["Gamepad API",2],["Web Audio",4],
+      ["IndexedDB",8],["Shared memory",16],["Fullscreen",32]
+    ];
+    caps.replaceChildren();
+    for (const [name,bit] of items) {
+      const available = (flags & bit) !== 0;
+      const item = document.createElement("div");
+      item.className = "cap";
+      const label = document.createElement("span");
+      label.textContent = name;
+      const value = document.createElement("span");
+      value.className = available ? "yes" : "no";
+      value.textContent = available ? "Available" : "Unavailable";
+      item.append(label,value);
+      caps.append(item);
+      write(name + ": " + (available ? "available" : "unavailable"));
+    }
+  }
   async function boot() {
     if (started) return;
     started = true;
     button.disabled = true;
     button.textContent = "Loading…";
     setState("", "Loading repository-hosted WebAssembly");
-    title.textContent = "Initializing";
-    message.textContent = "Loading the JavaScript loader and WebAssembly binary from this repository.";
-    write("Repository assets: " + ASSET_BASE.href);
+    title.textContent = "Initializing browser platform";
+    message.textContent = "Loading the compiled C++ platform adapter from this GitHub Pages repository.";
+    write("Loading " + new URL("mkwii-web.js", ASSET_BASE).href);
     try {
-      const scriptUrl = new URL("mkwii-web.js", ASSET_BASE);
       const script = document.createElement("script");
-      script.src = scriptUrl.href;
+      script.src = new URL("mkwii-web.js", ASSET_BASE).href;
       script.async = true;
-      await new Promise((resolve, reject) => {
+      await new Promise((resolve,reject) => {
         script.onload = resolve;
-        script.onerror = () => reject(new Error("Could not load dist/mkwii-web.js. Check that the GitHub Actions build finished and GitHub Pages is enabled."));
+        script.onerror = () => reject(new Error("Could not load dist/mkwii-web.js. Check that the latest Actions build completed."));
         document.head.appendChild(script);
       });
-      if (typeof createMkwiiModule !== "function") throw new Error("The WebAssembly factory was not found in the repository loader.");
+      if (typeof createMkwiiModule !== "function") throw new Error("The WebAssembly factory was not found in the downloaded loader.");
       const module = await createMkwiiModule({
-        locateFile: (path) => new URL(path, ASSET_BASE).href,
-        print: (line) => write(String(line)),
-        printErr: (line) => write("ERROR: " + String(line))
+        locateFile: path => new URL(path,ASSET_BASE).href,
+        print: line => write(String(line)),
+        printErr: line => write("ERROR: " + String(line))
       });
-      const getStatus = module.cwrap("mkwii_web_status", "number", []);
-      const result = getStatus();
-      setState("ok", "WebAssembly initialized successfully");
-      title.textContent = "WebAssembly is running";
-      message.textContent = "The browser loaded and executed the starter C++ module from this repository. This confirms the bootstrap only, not Mario Kart compatibility.";
-      write("Module status: " + result);
+      const getStatus = module.cwrap("mkwii_web_status","number",[]);
+      const getCapabilities = module.cwrap("mkwii_web_capabilities","number",[]);
+      const getUptime = module.cwrap("mkwii_web_uptime_ms","number",[]);
+      if (getStatus() !== 1) throw new Error("The C++ platform adapter returned an unexpected status.");
+      showCapabilities(getCapabilities());
+      write("Browser clock: " + getUptime().toFixed(1) + " ms");
+      setState("ok","WASM browser platform initialized");
+      title.textContent = "Version 0.1 initialized";
+      message.textContent = "The C++ browser platform layer is running and has reported its available browser APIs.";
       button.textContent = "Initialized";
     } catch (error) {
-      setState("bad", "Initialization failed");
+      setState("bad","Initialization failed");
       title.textContent = "Build not ready";
       message.textContent = error.message;
       write("FAILED: " + error.message);
@@ -92,13 +124,11 @@ This is an engine bring-up test, not a playable game yet.</pre>
       started = false;
     }
   }
-  button.addEventListener("click", boot);
+  button.addEventListener("click",boot);
   if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
-    navigator.serviceWorker.register(new URL("./sw.js", document.baseURI), {scope: "./"})
+    navigator.serviceWorker.register(new URL("./sw.js",document.baseURI),{scope:"./"})
       .then(() => write("Offline cache service worker registered."))
-      .catch((error) => write("Cache worker unavailable: " + error.message));
-  } else {
-    write("Service worker cache requires HTTPS hosting (GitHub Pages provides HTTPS).");
+      .catch(error => write("Cache worker unavailable: " + error.message));
   }
 })();
 </script>
