@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   build:
-    name: Translate PowerPC smoke function and compile browser resources
+    name: Translate PowerPC branch/memory programs and compile browser resources
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -81,7 +81,7 @@ jobs:
             echo "Browser resources are already up to date."
             exit 0
           fi
-          git commit -m "Build v0.9 translated PowerPC smoke test"
+          git commit -m "Build v0.10 translated PowerPC branch and memory tests"
           for attempt in 1 2 3 4 5; do
             git fetch origin main
             git rebase origin/main

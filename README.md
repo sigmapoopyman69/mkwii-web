@@ -2,7 +2,7 @@
 
 An experimental browser-port project for [WiiCompiled](https://github.com/patchzyy/Wiicompiled).
 
-**Current status: version 0.9 translator execution prototype. GitHub Actions runs the upstream PowerPC translator on a synthetic two-instruction program, compiles its generated C++ with Emscripten, and the browser executes it. This is not a playable Mario Kart Wii port.**
+**Current status: version 0.10 multi-instruction translation prototype. The browser executes upstream-translated conditional branches and guest-memory loads/stores from synthetic PowerPC functions. This is not a playable Mario Kart Wii port.**
 
 The goal is to investigate adapting WiiCompiled's static-recompilation output and runtime for browsers, with a single HTML launcher and repository-hosted WebAssembly resources.
 
@@ -86,7 +86,8 @@ This does not yet run upstream WiiCompiled scheduler code. The upstream runtime 
 7. **0.7 — Runtime memory API:** checked scalar, floating-point, and bulk-copy adapter.
 8. **0.8 — Translated-memory ABI:** expose checked browser implementations of the upstream FlatRead/FlatWrite helper names.
 9. **0.9 — First translated code:** use the upstream translator to emit a synthetic PowerPC function, compile it into the browser WASM module, and execute it.
-10. **0.10+ — Broader translation:** add translated loads/stores, branches, and additional instruction families with runtime compatibility tests.
+10. **0.10 — Multi-instruction programs:** translate and execute conditional branches plus guest-memory loads/stores in WebAssembly.
+11. **0.11+ — Broader runtime integration:** expand instruction coverage and connect more upstream runtime services.
 
 ## Technical limitation
 
@@ -101,6 +102,10 @@ Adds a process-wide checked guest-memory instance and browser implementations of
 ## Version 0.9 — First upstream-translated function
 
 The hosted build checks out WiiCompiled at pinned revision `03151e0a3429adb92dd9082fb815fbf194df3c1d`, builds its .NET translator core, and translates a synthetic PowerPC function containing `addi r3,r3,7` followed by `blr`. Emscripten compiles the generated C++ into the same browser WebAssembly module. At startup, a CPU-context wrapper calls the generated function with r3=35 and verifies r3=42. No game binary or game assets are used. See [the v0.9 translator smoke notes](docs/v0.9-translator-smoke.md).
+
+## Version 0.10 — Branches and guest-memory access
+
+The build now translates two synthetic PowerPC functions with the pinned upstream translator. One exercises `cmpwi` and `beq` with both taken and not-taken paths. The other executes `lwz`, `addi`, and `stw` against the browser guest-memory adapter. The browser checks the resulting register and stored memory values. See [the v0.10 translator program notes](docs/v0.10-translator-programs.md).
 
 ## Upstream licensing
 

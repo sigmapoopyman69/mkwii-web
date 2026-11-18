@@ -32,8 +32,7 @@ int main() {
 #ifdef WII_COMPILED_HAS_TRANSLATOR_SMOKE
     const int translatorResult = mkwii_web_translator_smoke_test();
     const bool translatorSmokeTest = translatorResult == 0;
-    std::printf("Upstream-translated branches (taken + not taken): %s\n", translatorResult <= 2 ? "CHECKED" : "FAIL");
-    std::printf("Upstream-translated guest loads/stores: %s\n", translatorResult == 0 ? "PASS" : "FAIL");
+    std::printf("Upstream-translated branch + guest-memory suite: %s\n", translatorSmokeTest ? "PASS" : "FAIL");
     if (translatorResult != 0)
         std::printf("Translator execution test code: %d\n", translatorResult);
 #else
