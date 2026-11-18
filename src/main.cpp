@@ -2,6 +2,7 @@
 #include <emscripten/emscripten.h>
 
 #include "platform/browser_platform.h"
+#include "platform/browser_host_context.h"
 
 extern "C" {
 
@@ -27,5 +28,7 @@ int main() {
     std::puts("WiiCompiled Web 0.4: browser platform layer initialized.");
     std::printf("Browser capability flags: %u\n", capabilities);
     std::puts("Game runtime and graphics backend are not connected yet.");
+    const bool fiberSmokeTest = BrowserHostContext::RunSmokeTest();
+    std::printf("Browser cooperative-fiber smoke test: %s\\n", fiberSmokeTest ? "PASS" : "FAIL");
     return 0;
 }
