@@ -1,18 +1,9 @@
-const CACHE_NAME = "mkwii-web-assets-v3";
-const APP_FILES = [
-  "./",
-  "./index.html",
-  "./manifest.webmanifest",
-  "./dist/mkwii-web.js",
-  "./dist/mkwii-web.wasm"
-];
+const CACHE_NAME = "mkwii-web-assets-v4";
 
+// Do not download the whole application during service-worker installation.
+// In particular, a large WASM file must not block activation.
 self.addEventListener("install", event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(APP_FILES))
-      .then(() => self.skipWaiting())
-  );
+  event.waitUntil(self.skipWaiting());
 });
 
 self.addEventListener("activate", event => {
@@ -38,13 +29,15 @@ self.addEventListener("fetch", event => {
 
   if (!isAppAsset) return;
 
-  // Prefer the latest deployed files while online; keep the cached copy as an
-  // offline fallback. This prevents an old HTML/JS pair from surviving deploys.
+  // Network-first: return the response as soon as it arrives. Cache the clone
+  // in the background so large JS/WASM downloads cannot hold up page loading.
   event.respondWith((async () => {
     const cache = await caches.open(CACHE_NAME);
     try {
       const fresh = await fetch(request);
-      if (fresh.ok) await cache.put(request, fresh.clone());
+      if (fresh.ok) {
+        event.waitUntil(cache.put(request, fresh.clone()).catch(() => {}));
+      }
       return fresh;
     } catch (error) {
       const cached = await cache.match(request);
