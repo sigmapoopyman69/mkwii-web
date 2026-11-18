@@ -85,9 +85,9 @@ return 0;
 
 static void Validate(FunctionTranslationResult result, string label, int expectedInstructions)
 {
-    if (result.Instructions.Count != expectedInstructions || result.Metrics.UnsupportedInstructionCount != 0)
+    if (result.Metrics.PpcInstructionCount != expectedInstructions || result.Metrics.UnsupportedInstructionCount != 0)
     {
         throw new InvalidOperationException(
-            $"{label}: unexpected translation; instructions={result.Instructions.Count}, unsupported={result.Metrics.UnsupportedInstructionCount}");
+            $"{label}: unexpected translation; PPC instructions={result.Metrics.PpcInstructionCount}, IR instructions={result.Instructions.Count}, unsupported={result.Metrics.UnsupportedInstructionCount}");
     }
 }
