@@ -17,7 +17,7 @@ add_executable(mkwii-web
   src/platform/browser_runtime_memory.cpp
   src/platform/browser_translated_memory.cpp
 )
-target_include_directories(mkwii-web PRIVATE src)
+target_include_directories(mkwii-web PRIVATE src src/generated)
 
 set(TRANSLATED_SMOKE_SOURCE "${CMAKE_SOURCE_DIR}/generated/translated_addi_smoke.cpp")
 if(WII_COMPILED_UPSTREAM_ROOT AND EXISTS "${TRANSLATED_SMOKE_SOURCE}")
