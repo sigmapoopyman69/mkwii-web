@@ -415,7 +415,7 @@ No game data is included.</pre>
       const module = await withTimeout(createMkwiiModule({
         locateFile: path => {
           const assetURL = new URL(path, ASSET_BASE);
-          assetURL.searchParams.set("build", "0.10");
+          assetURL.searchParams.set("build", "d42ec867");
           return assetURL.href;
         },
         print: line => write(String(line)),
