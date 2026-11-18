@@ -2,7 +2,7 @@
 
 An experimental browser-port project for [WiiCompiled](https://github.com/patchzyy/Wiicompiled).
 
-**Current status: version 0.5 runtime-porting prototype. The Emscripten cooperative-fiber adapter is being validated; this is not a playable Mario Kart Wii port.**
+**Current status: version 0.6 guest-memory port prototype. Sparse Wii RAM address mapping is being validated; this is not a playable Mario Kart Wii port.**
 
 The goal is to investigate adapting WiiCompiled's static-recompilation output and runtime for browsers, with a single HTML launcher and repository-hosted WebAssembly resources.
 
@@ -92,3 +92,10 @@ The translator is a build-time tool. This repository does not include Nintendo g
 ## Upstream licensing
 
 WiiCompiled is licensed under GPL-3.0. Any code incorporated from WiiCompiled must retain its applicable notices and comply with the upstream license. See the upstream [LICENSE](https://github.com/patchzyy/Wiicompiled/blob/main/LICENSE).
+
+
+## Version 0.6 — Guest-memory port prototype
+
+Adds an independently written, sparse WebAssembly-compatible model of Wii MEM1 (24 MiB) and MEM2 (128 MiB). Physical, cached, and uncached address aliases share the same backing pages. Memory pages allocate on first write, scalar accessors use PowerPC big-endian byte order, and invalid accesses are rejected. A startup smoke test checks aliasing, bounds, sparse allocation, and reset.
+
+This is not yet upstream's Memory/MemoryInline implementation and does not implement MMIO, deferred framebuffer reads, executable write guards, or direct translated-code pointers. See [the v0.6 guest-memory notes](docs/v0.6-guest-memory.md).
